@@ -7,6 +7,7 @@
 #include "RB_CC_MyCharacter.generated.h"
 
 
+
 class USpringArmComponent;
 class UCameraComponent;
 class UStaticMeshComponent;
@@ -29,6 +30,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player");
 	UStaticMeshComponent* StaticMeshComp;
 
+
+
+
 protected:
 	// Called when the game starts or when spawned
 	// virtual void BeginPlay() override;
@@ -37,6 +41,7 @@ protected:
 	void MoveRight(float Value);
 	void TurnAtRate(float Value);
 	void LookUpAtRate(float Value);
+	void InteractPressed();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
 	float BaseTurnRate;
@@ -44,11 +49,24 @@ protected:
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
 	float BaseLookUpAtRate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction");
+	float TraceDistance;
+
+
+	UFUNCTION(BlueprintNativeEvent)
+	void TraceForward();
+	void TraceForward_Implementation();
+
 public:	
 	// Called every frame
-	// virtual void Tick(float DeltaTime) override;
+	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+
+private:
+	AActor* FocusedActor;
+
 
 };

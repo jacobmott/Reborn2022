@@ -7,13 +7,15 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/Controller.h"
+#include "DrawDebugHelpers.h"
+#include "Interact/InteractInterface.h"
 
 // Sets default values
 ARB_CC_MyCharacter::ARB_CC_MyCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	// PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
+	//PrimaryActorTick.bCanEverTick = false;
 
   SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
   //SpringArmComp->bUsePawnControlRotation = true;
@@ -27,6 +29,7 @@ ARB_CC_MyCharacter::ARB_CC_MyCharacter()
 
   BaseTurnRate = 45.0f;
   BaseLookUpAtRate = 45.0f;
+  TraceDistance = 2000.0f;
 }
 
 // Called when the game starts or when spawned
@@ -79,12 +82,72 @@ void ARB_CC_MyCharacter::LookUpAtRate(float Value)
   AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds());
 }
 
+void ARB_CC_MyCharacter::InteractPressed()
+{
+
+  TraceForward();
+  if (FocusedActor) {
+    IInteractInterface* Interface = Cast<IInteractInterface>(FocusedActor);
+    if (Interface) {
+      Interface->Execute_OnInteract(FocusedActor, this);
+    }
+  }
+}
+
+void ARB_CC_MyCharacter::TraceForward_Implementation()
+{
+  FVector Loc;
+  FRotator Rot;
+  FHitResult Hit;
+
+  GetController()->GetPlayerViewPoint(Loc, Rot);
+
+  FVector Start = Loc;
+  FVector End = Start + (Rot.Vector() * 2000);
+
+  FCollisionQueryParams TraceParams;
+  bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, TraceParams);
+  //DrawDebugLine(GetWorld(), Start, End, FColor::Orange, false, 2.0f, 0, 1.0f);
+ 
+
+  if (bHit) {
+    //DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Emerald, false, 2.0f);
+    AActor* Interactable = Hit.GetActor();  
+    if (Interactable) {
+      if (Interactable != FocusedActor) {
+        if (FocusedActor) {
+          IInteractInterface* Interface = Cast<IInteractInterface>(FocusedActor);
+          if (Interface) {
+            Interface->Execute_EndFocus(FocusedActor);
+          }
+        }
+        IInteractInterface* Interface = Cast<IInteractInterface>(Interactable);
+        if (Interface) {
+          Interface->Execute_StartFocus(Interactable);
+        }
+        FocusedActor = Interactable;
+      }
+
+    }
+  }
+  else {
+    if (FocusedActor) {
+      IInteractInterface* Interface = Cast<IInteractInterface>(FocusedActor);
+      if (Interface) {
+        Interface->Execute_EndFocus(FocusedActor);
+      }
+    }
+    FocusedActor = nullptr;
+  }
+}
+
 // Called every frame
-//void ARB_CC_MyCharacter::Tick(float DeltaTime)
-//{
-//	Super::Tick(DeltaTime);
-//
-//}
+void ARB_CC_MyCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+  TraceForward();
+
+}
 
 // Called to bind functionality to input
 void ARB_CC_MyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -94,12 +157,13 @@ void ARB_CC_MyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
   PlayerInputComponent->BindAxis("MoveForward", this, &ARB_CC_MyCharacter::MoveForward);
   PlayerInputComponent->BindAxis("MoveRight", this, &ARB_CC_MyCharacter::MoveRight);
 
+
   PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
   PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
   PlayerInputComponent->BindAxis("TurnRate", this, &ARB_CC_MyCharacter::TurnAtRate);
   PlayerInputComponent->BindAxis("LookUpRate", this, &ARB_CC_MyCharacter::LookUpAtRate);
 
-
+  PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ARB_CC_MyCharacter::InteractPressed);
   PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
   PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
