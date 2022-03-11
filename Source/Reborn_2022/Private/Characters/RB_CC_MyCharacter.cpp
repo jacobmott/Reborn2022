@@ -26,18 +26,31 @@ ARB_CC_MyCharacter::ARB_CC_MyCharacter()
 
   StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComp"));
   StaticMeshComp->SetupAttachment(RootComponent);
+  StaticMeshComp->OnComponentBeginOverlap.AddDynamic(this, &ARB_CC_MyCharacter::OnOverlapBegin);
 
   BaseTurnRate = 45.0f;
   BaseLookUpAtRate = 45.0f;
   TraceDistance = 2000.0f;
 }
 
+void ARB_CC_MyCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, 
+  int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+  if (FocusedActor) {
+    IInteractInterface* Interface = Cast<IInteractInterface>(OtherActor);
+    if (Interface) {
+      Interface->Execute_OnInteract(OtherActor, this);
+    }
+  }
+}
+
 // Called when the game starts or when spawned
-// void ARB_CC_MyCharacter::BeginPlay()
-// {
+//void ARB_CC_MyCharacter::BeginPlay()
+//{
 // 	Super::BeginPlay();
-// 	
-// }
+//  //If this doesnt work from including it in the contstructor then you should add it here and enable/uncomment begin play
+//  StaticMeshComp->OnComponentBeginOverlap.AddDynamic(this, &ARB_CC_MyCharacter::OnOverlapBegin);
+//}
 
 void ARB_CC_MyCharacter::MoveForward(float Value)
 {
