@@ -13,87 +13,87 @@ class UCameraComponent;
 class UStaticMeshComponent;
 
 struct ForwardTraceHitInformation {
-	bool HadHit;
-	FVector Start;
-	FVector End;
-	FHitResult HitResult;
+  bool HadHit;
+  FVector Start;
+  FVector End;
+  FHitResult HitResult;
 };
 
 UCLASS()
 class REBORN_2022_API ARB_CC_MyCharacter : public ACharacter
 {
-	GENERATED_BODY()
+  GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
-	ARB_CC_MyCharacter();
+  // Sets default values for this character's properties
+  ARB_CC_MyCharacter();
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
   USpringArmComponent* SpringArmComp;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
-	UCameraComponent* CameraComp;
+  UCameraComponent* CameraComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player");
-	UStaticMeshComponent* StaticMeshComp;
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player");
+  UStaticMeshComponent* StaticMeshComp;
 
-	UFUNCTION()
+  UFUNCTION()
   void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
-		const FHitResult& SweepResult);
+    const FHitResult& SweepResult);
 
 
 protected:
-	// Called when the game starts or when spawned
-	//virtual void BeginPlay() override;
+  // Called when the game starts or when spawned
+  //virtual void BeginPlay() override;
 
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-	void TurnAtRate(float Value);
-	void LookUpAtRate(float Value);
-	void InteractPressed();
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
-	float BaseTurnRate;
+  void MoveForward(float Value);
+  void MoveRight(float Value);
+  void TurnAtRate(float Value);
+  void LookUpAtRate(float Value);
+  void InteractPressed();
 
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
-	float BaseLookUpAtRate;
+  float BaseTurnRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction");
-	float TraceDistance;
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
+  float BaseLookUpAtRate;
 
-
-	UFUNCTION(BlueprintNativeEvent)
-	void TraceForward();
-	void TraceForward_Implementation();
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction");
+  float TraceDistance;
 
 
-	//Impulse
-	UPROPERTY(EditAnywhere)
-	float ImpulseForce;
-	void FireForward();
+  UFUNCTION(BlueprintNativeEvent)
+  void TraceForward();
+  void TraceForward_Implementation();
 
-	//Radial Impulse
+
+  //Impulse
+  UPROPERTY(EditAnywhere)
+  float ImpulseForce;
+  void FireForward();
+
+  //Radial Impulse
   UPROPERTY(EditAnywhere)
   bool ApplyRadialForce;
   UPROPERTY(EditAnywhere)
-	float ImpactRadius;
-	UPROPERTY(EditAnywhere)
-	float RadialImpactForce;
+  float ImpactRadius;
+  UPROPERTY(EditAnywhere)
+  float RadialImpactForce;
   UPROPERTY(EditAnywhere)
   bool UseActorsCenterOfMassInCollisionCalculation;
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+  // Called every frame
+  virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+  // Called to bind functionality to input
+  virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 
 private:
-	AActor* FocusedActor;
+  AActor* FocusedActor;
 
 
-	ForwardTraceHitInformation GetForwardTraceHitInformation();
+  ForwardTraceHitInformation GetForwardTraceHitInformation();
 
 };

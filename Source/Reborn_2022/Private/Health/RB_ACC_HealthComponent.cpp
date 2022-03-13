@@ -6,38 +6,38 @@
 // Sets default values for this component's properties
 URB_ACC_HealthComponent::URB_ACC_HealthComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = false;
+  // Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
+  // off to improve performance if you don't need them.
+  PrimaryComponentTick.bCanEverTick = false;
 
-	DefaultHealth = 100;
-	Health = DefaultHealth;
+  DefaultHealth = 100;
+  Health = DefaultHealth;
 
-	// ...
+  // ...
 }
 
 
 // Called when the game starts
 void URB_ACC_HealthComponent::BeginPlay()
 {
-	Super::BeginPlay();
+  Super::BeginPlay();
 
-	AActor* Owner = GetOwner();
+  AActor* Owner = GetOwner();
   if (Owner) {
-		Owner->OnTakeAnyDamage.AddDynamic(this, &URB_ACC_HealthComponent::HandleTakeAnyDamage);
+    Owner->OnTakeAnyDamage.AddDynamic(this, &URB_ACC_HealthComponent::HandleTakeAnyDamage);
   }
 
-	// ...
-	
+  // ...
+  
 }
 
 void URB_ACC_HealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (Damage < 0) {
-		return;
-	}
+  if (Damage < 0) {
+    return;
+  }
 
-	Health = FMath::Clamp(Health - Damage, 0.0f, DefaultHealth);
+  Health = FMath::Clamp(Health - Damage, 0.0f, DefaultHealth);
 
 }
 

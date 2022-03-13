@@ -10,15 +10,15 @@
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class REBORN_2022_API URB_ACC_HealthComponent : public UActorComponent
 {
-	GENERATED_BODY()
+  GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
-	URB_ACC_HealthComponent();
+  // Sets default values for this component's properties
+  URB_ACC_HealthComponent();
 
 protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
+  // Called when the game starts
+  virtual void BeginPlay() override;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health");
   float DefaultHealth;
@@ -30,8 +30,8 @@ protected:
   void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 public:	
-	// Called every frame
-	// virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+  // Called every frame
+  // virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+    
 };

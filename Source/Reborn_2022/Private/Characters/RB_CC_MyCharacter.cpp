@@ -19,9 +19,9 @@
 // Sets default values
 ARB_CC_MyCharacter::ARB_CC_MyCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-	//PrimaryActorTick.bCanEverTick = false;
+  // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+  PrimaryActorTick.bCanEverTick = true;
+  //PrimaryActorTick.bCanEverTick = false;
 
   SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
   //SpringArmComp->bUsePawnControlRotation = true;
@@ -205,14 +205,14 @@ void ARB_CC_MyCharacter::FireForward()
     
     //if (DidSweepHit){
       for (auto& Hit : HitResultsFromRadialForce) {
+        //Can we move the root component of what we hit? if not return
+        if (!Hit.GetActor()->IsRootComponentMovable()) {
+          continue;
+        }
         //Do we have a static mesh for what we hit? otherwise return
         UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Hit.GetActor()->GetRootComponent());
         GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange, TEXT("Sweeped across: ")+Hit.GetActor()->GetName());
         if (MeshComp) {
-          if (Hit.GetActor()->GetName().Equals(TEXT("Floor"))) {
-
-          }
-          else{
             DrawDebugSphere(GetWorld(), HitResult.Location, 20.0f, 35, FColor::Red, false, 3.0f);
             DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(ImpactRadius, 0.0f, 0.0f)), FColor::Red, false, 3.0f, 0, 10.0f);
             DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(0.0f, ImpactRadius, 0.0f)), FColor::Red, false, 3.0f, 0, 10.0f);
@@ -249,7 +249,6 @@ void ARB_CC_MyCharacter::FireForward()
             }
 
             MeshComp->AddRadialImpulse(HitResult.Location, RealDistanceFromHitOriginToActorCOM, RadialImpactForce, ERadialImpulseFalloff::RIF_Constant, true);
-}
           }
       }
     //}
@@ -269,15 +268,15 @@ void ARB_CC_MyCharacter::FireForward()
   }
 
   //Everything checks out! Move that sucker! Impulse!
-  //FVector CameraForward = CameraComp->GetForwardVector();
-  //MeshComp->AddImpulse(CameraForward * ImpulseForce * MeshComp->GetMass());
+  FVector CameraForward = CameraComp->GetForwardVector();
+  MeshComp->AddImpulse(CameraForward * ImpulseForce * MeshComp->GetMass());
 
 }
 
 // Called every frame
 void ARB_CC_MyCharacter::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+  Super::Tick(DeltaTime);
   TraceForward();
 
 }
@@ -285,7 +284,7 @@ void ARB_CC_MyCharacter::Tick(float DeltaTime)
 // Called to bind functionality to input
 void ARB_CC_MyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+  Super::SetupPlayerInputComponent(PlayerInputComponent);
 
   PlayerInputComponent->BindAxis("MoveForward", this, &ARB_CC_MyCharacter::MoveForward);
   PlayerInputComponent->BindAxis("MoveRight", this, &ARB_CC_MyCharacter::MoveRight);

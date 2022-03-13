@@ -7,8 +7,8 @@
 // Sets default values
 ARB_AC_ForceActor::ARB_AC_ForceActor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+  // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+  PrimaryActorTick.bCanEverTick = true;
 
   StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Force Mesh"));
   StaticMeshComp->SetupAttachment(RootComponent);
@@ -20,14 +20,14 @@ ARB_AC_ForceActor::ARB_AC_ForceActor()
 // Called when the game starts or when spawned
 void ARB_AC_ForceActor::BeginPlay()
 {
-	Super::BeginPlay();
-	
+  Super::BeginPlay();
+  
 }
 
 // Called every frame
 void ARB_AC_ForceActor::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+  Super::Tick(DeltaTime);
 
 
   FVector UpForce = StaticMeshComp->GetUpVector();
