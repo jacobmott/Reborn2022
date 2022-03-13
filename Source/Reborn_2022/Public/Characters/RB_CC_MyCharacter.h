@@ -7,10 +7,10 @@
 #include "RB_CC_MyCharacter.generated.h"
 
 
-
 class USpringArmComponent;
 class UCameraComponent;
 class UStaticMeshComponent;
+class UMatineeCameraShake;
 
 struct ForwardTraceHitInformation {
   bool HadHit;
@@ -82,6 +82,9 @@ protected:
   UPROPERTY(EditAnywhere)
   bool UseActorsCenterOfMassInCollisionCalculation;
 
+  UPROPERTY(EditAnywhere)
+  TSubclassOf<UMatineeCameraShake> CameraShake;
+
 public:	
   // Called every frame
   virtual void Tick(float DeltaTime) override;
@@ -93,6 +96,7 @@ public:
 private:
   AActor* FocusedActor;
 
+  void CameraShakeDemo(float Scale);
 
   ForwardTraceHitInformation GetForwardTraceHitInformation();
 

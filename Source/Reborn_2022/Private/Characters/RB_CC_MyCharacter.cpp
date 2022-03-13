@@ -9,12 +9,16 @@
 #include "GameFramework/Controller.h"
 #include "DrawDebugHelpers.h"
 #include "Interact/InteractInterface.h"
+#include "MatineeCameraShake.h"
+
 
 #include "PhysXPublic.h"
 #include "PhysxUserData.h"
 #include "PhysXPublic.h"
 #include "PhysicsEngine/PhysicsSettings.h"
 #include "PhysicsEngine/BodyInstance.h"
+
+DECLARE_DELEGATE_OneParam(FShakeDelegate, float);
 
 // Sets default values
 ARB_CC_MyCharacter::ARB_CC_MyCharacter()
@@ -168,8 +172,17 @@ void ARB_CC_MyCharacter::TraceForward_Implementation()
 
 }
 
+void ARB_CC_MyCharacter::CameraShakeDemo(float Scale)
+{
+  GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange, TEXT("Make it to CameraShakeDemo"));
+  GetWorld()->GetFirstPlayerController()->PlayerCameraManager->StartCameraShake(CameraShake, Scale);
+
+}
+
 void ARB_CC_MyCharacter::FireForward()
 {
+
+  GetWorld()->GetFirstPlayerController()->PlayerCameraManager->StartCameraShake(CameraShake, 1.0f);
 
   struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation();
   bool HadHit = TraceInfo.HadHit;
@@ -300,6 +313,7 @@ void ARB_CC_MyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
   PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
   PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
+  PlayerInputComponent->BindAction<FShakeDelegate>(TEXT("CameraShake"), IE_Pressed, this, &ARB_CC_MyCharacter::CameraShakeDemo, 1.0f);
   //PlayerInputComponent->BindAction("LMBDown", IE_Pressed, this, &AMainCharacter::LMBDown);
 
 
