@@ -10,6 +10,12 @@
 #include "DrawDebugHelpers.h"
 #include "Interact/InteractInterface.h"
 
+#include "PhysXPublic.h"
+#include "PhysxUserData.h"
+#include "PhysXPublic.h"
+#include "PhysicsEngine/PhysicsSettings.h"
+#include "PhysicsEngine/BodyInstance.h"
+
 // Sets default values
 ARB_CC_MyCharacter::ARB_CC_MyCharacter()
 {
@@ -31,6 +37,16 @@ ARB_CC_MyCharacter::ARB_CC_MyCharacter()
   BaseTurnRate = 45.0f;
   BaseLookUpAtRate = 45.0f;
   TraceDistance = 2000.0f;
+
+  ImpulseForce = 500.0f;
+
+
+  ApplyRadialForce = true;
+  ImpactRadius = 200.0f;
+  RadialImpactForce = 2000.0f;
+  UseActorsCenterOfMassInCollisionCalculation = true;
+
+
 }
 
 void ARB_CC_MyCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, 
@@ -109,41 +125,12 @@ void ARB_CC_MyCharacter::InteractPressed()
 
 void ARB_CC_MyCharacter::TraceForward_Implementation()
 {
-  FVector Loc;
-  FRotator Rot;
-  FHitResult Hit;
 
-  GetController()->GetPlayerViewPoint(Loc, Rot);
+  struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation();
+  bool HadHit = TraceInfo.HadHit;
+  FHitResult HitResult = TraceInfo.HitResult;
 
-  FVector Start = Loc;
-  FVector End = Start + (Rot.Vector() * 2000);
-
-  FCollisionQueryParams TraceParams;
-  bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, TraceParams);
-  //DrawDebugLine(GetWorld(), Start, End, FColor::Orange, false, 2.0f, 0, 1.0f);
- 
-
-  if (bHit) {
-    //DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Emerald, false, 2.0f);
-    AActor* Interactable = Hit.GetActor();  
-    if (Interactable) {
-      if (Interactable != FocusedActor) {
-        if (FocusedActor) {
-          IInteractInterface* Interface = Cast<IInteractInterface>(FocusedActor);
-          if (Interface) {
-            Interface->Execute_EndFocus(FocusedActor);
-          }
-        }
-        IInteractInterface* Interface = Cast<IInteractInterface>(Interactable);
-        if (Interface) {
-          Interface->Execute_StartFocus(Interactable);
-        }
-        FocusedActor = Interactable;
-      }
-
-    }
-  }
-  else {
+  if (!HadHit) {
     if (FocusedActor) {
       IInteractInterface* Interface = Cast<IInteractInterface>(FocusedActor);
       if (Interface) {
@@ -151,7 +138,140 @@ void ARB_CC_MyCharacter::TraceForward_Implementation()
       }
     }
     FocusedActor = nullptr;
+    return;
   }
+
+  //DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Emerald, false, 2.0f);
+  AActor* InteractableActorWeHit = HitResult.GetActor();
+  if (!InteractableActorWeHit) {
+    return;
+  }
+
+  if (InteractableActorWeHit == FocusedActor) {
+    return;
+  }
+
+  //If everything is valid, and we have a previous focusedActor.. 
+  //end focus on that focused actor and start focus on our new HitActorInteractable actor
+  if (FocusedActor) {
+    IInteractInterface* Interface = Cast<IInteractInterface>(FocusedActor);
+    if (Interface) {
+      Interface->Execute_EndFocus(FocusedActor);
+    }
+  }
+  IInteractInterface* Interface = Cast<IInteractInterface>(InteractableActorWeHit);
+  if (Interface) {
+    Interface->Execute_StartFocus(InteractableActorWeHit);
+  }
+  FocusedActor = InteractableActorWeHit;
+  
+
+}
+
+void ARB_CC_MyCharacter::FireForward()
+{
+
+  struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation();
+  bool HadHit = TraceInfo.HadHit;
+  FHitResult HitResult = TraceInfo.HitResult;
+
+  //Check if we had a hit, return if not
+  if (!HadHit) {
+    return;
+  }
+
+  //https://www.udemy.com/course/unreal-engine-blueprints-the-ultimate-developer-course/learn/lecture/16386624#overview
+  if (ApplyRadialForce){
+    FString IntAsString2 = FString::FromInt(RadialImpactForce);
+    GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange, TEXT("RadialImpactForce: ") + IntAsString2);
+    FString IntAsString3 = FString::FromInt(ImpactRadius);
+    GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange, TEXT("ImpactRadius: ") + IntAsString3);
+    FCollisionShape SphereCollision = FCollisionShape::MakeSphere(ImpactRadius);
+    //Lets apply some radial force, so we can move actors around the actor we just hit
+    TArray<FHitResult> HitResultsFromRadialForce;
+    //FCollisionObjectQueryParams ObjectQueryParams;
+    //ObjectQueryParams.AllDynamicObjects;
+    //bool DidSweepHit = GetWorld()->SweepMultiByChannel(HitResultsFromRadialForce, HitResult.Location, HitResult.Location+(FVector(0.001f, 0.001f, 1.0f)),
+    //  FQuat::Identity, ECC_WorldStatic, SphereCollision);
+    // Be careful with these sweeps, since they actually ahve to "sweep'/move to detect collision, so start and end need some difference so
+    //things can actually sweep 
+    //https://www.youtube.com/watch?v=Sg1siSsT2-0
+    bool DidSweepHit = GetWorld()->SweepMultiByChannel(HitResultsFromRadialForce, HitResult.Location, HitResult.Location + FVector(0.0f, 0.0f, 0.001f),
+      FQuat::Identity, ECC_WorldStatic, SphereCollision);
+    DrawDebugSphere(GetWorld(), HitResult.Location, ImpactRadius, 35, FColor::Orange, false, 3.0f);
+    int results = HitResultsFromRadialForce.Num();
+    FString IntAsString = FString::FromInt(results);
+    GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange, IntAsString);
+    
+    //if (DidSweepHit){
+      for (auto& Hit : HitResultsFromRadialForce) {
+        //Do we have a static mesh for what we hit? otherwise return
+        UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Hit.GetActor()->GetRootComponent());
+        GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange, TEXT("Sweeped across: ")+Hit.GetActor()->GetName());
+        if (MeshComp) {
+          if (Hit.GetActor()->GetName().Equals(TEXT("Floor"))) {
+
+          }
+          else{
+            DrawDebugSphere(GetWorld(), HitResult.Location, 20.0f, 35, FColor::Red, false, 3.0f);
+            DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(ImpactRadius, 0.0f, 0.0f)), FColor::Red, false, 3.0f, 0, 10.0f);
+            DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(0.0f, ImpactRadius, 0.0f)), FColor::Red, false, 3.0f, 0, 10.0f);
+            DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(0.0f, 0.0f, ImpactRadius)), FColor::Red, false, 3.0f, 0, 10.0f);
+            GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange, TEXT("Had mesh"));
+            //https://forums.unrealengine.com/t/how-to-find-center-of-mass/285687
+            //https://cpp.hotexamples.com/examples/-/PxRigidBody/addForce/cpp-pxrigidbody-addforce-method-examples.html
+            DrawDebugSphere(GetWorld(), MeshComp->GetBodyInstance()->GetCOMPosition(), 10.0f, 32, FColor::Orange, false, 3.0f);
+
+            //float ActorCOMZPosDiffFromHitOriginZPos = FMath::Abs(MeshComp->GetBodyInstance()->GetCOMPosition().Z - HitResult.Location.Z);
+            FVector HitOriginLocation = HitResult.Location;
+            FVector diff = MeshComp->GetBodyInstance()->GetCOMPosition() - HitOriginLocation;
+            float RealDistanceFromHitOriginToActorCOM = ImpactRadius;
+            if (UseActorsCenterOfMassInCollisionCalculation) {
+              RealDistanceFromHitOriginToActorCOM = diff.Size();
+            }
+            FPhysicsActorHandle PAH = MeshComp->GetBodyInstance()->GetPhysicsActorHandle();
+            PxRigidBody* Actor = FPhysicsInterface::GetPxRigidBody_AssumesLocked(PAH);
+            if (!Actor) {
+              continue;
+            }
+            PxTransform PCOMTransform = Actor->getGlobalPose().transform(Actor->getCMassLocalPose());
+            PxVec3 PCOMPos = PCOMTransform.p; // center of mass in world space
+            PxVec3 POrigin = U2PVector(HitResult.Location); // origin of radial impulse, in world space
+            PxVec3 PDelta = PCOMPos - POrigin; // vector from origin to COM
+
+            float Mag = PDelta.magnitude(); // Distance from COM to origin, in Unreal scale : @todo: do we still need conversion scale?
+            FString IntAsString33 = FString::FromInt(Mag);
+            GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange, TEXT("Mag is: ")+ IntAsString33);
+            // If COM is outside radius, do nothing.
+            if (Mag > ImpactRadius)
+            {
+              GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange, TEXT("WTF!"));
+            }
+
+            MeshComp->AddRadialImpulse(HitResult.Location, RealDistanceFromHitOriginToActorCOM, RadialImpactForce, ERadialImpulseFalloff::RIF_Constant, true);
+}
+          }
+      }
+    //}
+  }
+
+
+  //Do we have a static mesh for what we hit? otherwise return
+  UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(HitResult.GetActor()->GetRootComponent());
+  if (!MeshComp) {
+    return;
+  }
+
+
+  //Can we move the root component of what we hit? if not return
+  if (!HitResult.GetActor()->IsRootComponentMovable()) {
+    return;
+  }
+
+  //Everything checks out! Move that sucker! Impulse!
+  //FVector CameraForward = CameraComp->GetForwardVector();
+  //MeshComp->AddImpulse(CameraForward * ImpulseForce * MeshComp->GetMass());
+
 }
 
 // Called every frame
@@ -177,11 +297,36 @@ void ARB_CC_MyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
   PlayerInputComponent->BindAxis("LookUpRate", this, &ARB_CC_MyCharacter::LookUpAtRate);
 
   PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ARB_CC_MyCharacter::InteractPressed);
+  PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ARB_CC_MyCharacter::FireForward);
   PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
   PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
   //PlayerInputComponent->BindAction("LMBDown", IE_Pressed, this, &AMainCharacter::LMBDown);
 
 
+}
+
+ForwardTraceHitInformation ARB_CC_MyCharacter::GetForwardTraceHitInformation()
+{
+  FVector Loc;
+  FRotator Rot;
+  FHitResult Hit;
+
+  GetController()->GetPlayerViewPoint(Loc, Rot);
+
+  FVector Start = Loc;
+  FVector End = Start + (Rot.Vector() * 2000);
+
+  FCollisionQueryParams TraceParams;
+  bool HadHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, TraceParams);
+  //DrawDebugLine(GetWorld(), Start, End, FColor::Orange, false, 2.0f, 0, 1.0f);
+
+  struct ForwardTraceHitInformation Result;
+  Result.HadHit = HadHit;
+  Result.Start = Start;
+  Result.End = End;
+  Result.HitResult = Hit;
+
+  return Result;
 }
 

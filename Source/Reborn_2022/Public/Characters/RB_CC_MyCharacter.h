@@ -12,6 +12,13 @@ class USpringArmComponent;
 class UCameraComponent;
 class UStaticMeshComponent;
 
+struct ForwardTraceHitInformation {
+	bool HadHit;
+	FVector Start;
+	FVector End;
+	FHitResult HitResult;
+};
+
 UCLASS()
 class REBORN_2022_API ARB_CC_MyCharacter : public ACharacter
 {
@@ -59,6 +66,22 @@ protected:
 	void TraceForward();
 	void TraceForward_Implementation();
 
+
+	//Impulse
+	UPROPERTY(EditAnywhere)
+	float ImpulseForce;
+	void FireForward();
+
+	//Radial Impulse
+  UPROPERTY(EditAnywhere)
+  bool ApplyRadialForce;
+  UPROPERTY(EditAnywhere)
+	float ImpactRadius;
+	UPROPERTY(EditAnywhere)
+	float RadialImpactForce;
+  UPROPERTY(EditAnywhere)
+  bool UseActorsCenterOfMassInCollisionCalculation;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -70,5 +93,7 @@ public:
 private:
 	AActor* FocusedActor;
 
+
+	ForwardTraceHitInformation GetForwardTraceHitInformation();
 
 };
