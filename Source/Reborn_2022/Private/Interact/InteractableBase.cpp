@@ -11,10 +11,28 @@ AInteractableBase::AInteractableBase()
 
 }
 
+void AInteractableBase::TimelineProgress(float Value)
+{
+  FVector NewLocation = FMath::Lerp(StartLoc, EndLoc, Value);
+  SetActorLocation(NewLocation);
+}
+
 // Called when the game starts or when spawned
 void AInteractableBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (CurveFloat) {
+		FOnTimelineFloat TimelineProgress;
+    TimelineProgress.BindUFunction(this, FName("TimelineProgress"));
+		CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
+		CurveTimeline.SetLooping(true);
+
+		StartLoc = EndLoc = GetActorLocation();
+    EndLoc.Z += ZOffset;
+
+    CurveTimeline.PlayFromStart();
+	}
 	
 }
 
@@ -22,6 +40,7 @@ void AInteractableBase::BeginPlay()
 void AInteractableBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+  CurveTimeline.TickTimeline(DeltaTime);
 
 }
 

@@ -51,6 +51,12 @@ ARB_CC_MyCharacter::ARB_CC_MyCharacter()
   UseActorsCenterOfMassInCollisionCalculation = true;
 
 
+
+  StartScale = FVector(1, 1, 1);
+  TargetScale = FVector(1.3f, 1.3f, 0.8f);
+  SquashTimeline;
+
+
 }
 
 void ARB_CC_MyCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, 
@@ -118,13 +124,19 @@ void ARB_CC_MyCharacter::LookUpAtRate(float Value)
 void ARB_CC_MyCharacter::InteractPressed()
 {
 
-  TraceForward();
-  if (FocusedActor) {
-    IInteractInterface* Interface = Cast<IInteractInterface>(FocusedActor);
-    if (Interface) {
-      Interface->Execute_OnInteract(FocusedActor, this);
-    }
-  }
+
+}
+
+void ARB_CC_MyCharacter::SpawnActor()
+{
+
+  struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation();
+  bool HadHit = TraceInfo.HadHit;
+  FHitResult HitResult = TraceInfo.HitResult;
+
+  if (HadHit){
+    SpawnActorAtLocation(HitResult.Location, TraceInfo.Rot);
+  } 
 }
 
 void ARB_CC_MyCharacter::TraceForward_Implementation()
@@ -181,8 +193,6 @@ void ARB_CC_MyCharacter::CameraShakeDemo(float Scale)
 
 void ARB_CC_MyCharacter::FireForward()
 {
-
-  GetWorld()->GetFirstPlayerController()->PlayerCameraManager->StartCameraShake(CameraShake, 1.0f);
 
   struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation();
   bool HadHit = TraceInfo.HadHit;
@@ -291,6 +301,7 @@ void ARB_CC_MyCharacter::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
   TraceForward();
+  SquashTimeline.TickTimeline(DeltaTime);
 
 }
 
@@ -309,6 +320,7 @@ void ARB_CC_MyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
   PlayerInputComponent->BindAxis("LookUpRate", this, &ARB_CC_MyCharacter::LookUpAtRate);
 
   PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ARB_CC_MyCharacter::InteractPressed);
+  PlayerInputComponent->BindAction("SpawnActor", IE_Pressed, this, &ARB_CC_MyCharacter::SpawnActor);
   PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ARB_CC_MyCharacter::FireForward);
   PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
   PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
@@ -318,6 +330,8 @@ void ARB_CC_MyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 
 }
+
+
 
 ForwardTraceHitInformation ARB_CC_MyCharacter::GetForwardTraceHitInformation()
 {
@@ -339,7 +353,40 @@ ForwardTraceHitInformation ARB_CC_MyCharacter::GetForwardTraceHitInformation()
   Result.Start = Start;
   Result.End = End;
   Result.HitResult = Hit;
+  Result.Rot = Rot;
 
   return Result;
+}
+
+void ARB_CC_MyCharacter::SpawnActorAtLocation(FVector Location, FRotator Rotation)
+{
+
+  FActorSpawnParameters SpawnParams;
+  AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(ActorToSpawn, Location, Rotation, SpawnParams);
+
+}
+
+void ARB_CC_MyCharacter::Landed(const FHitResult& Hit)
+{
+  
+  Super::Landed(Hit);
+  if (CurveFloat) {
+    FOnTimelineFloat TimeLineProgress;
+    TimeLineProgress.BindUFunction(this, FName("SquashProgress"));
+    SquashTimeline.AddInterpFloat(CurveFloat, TimeLineProgress); 
+    SquashTimeline.SetLooping(false);
+    SquashTimeline.PlayFromStart();
+  }
+
+
+}
+
+void ARB_CC_MyCharacter::SquashProgress(float Value)
+{
+
+  FString TheFloatStr = FString::SanitizeFloat(Value);
+  GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Orange, TEXT("SquashProgress value: ") + TheFloatStr);
+  FVector NewScale = FMath::Lerp(StartScale, TargetScale, Value);
+  StaticMeshComp->SetWorldScale3D(NewScale);
 }
 

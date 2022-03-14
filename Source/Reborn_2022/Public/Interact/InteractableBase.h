@@ -3,9 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/TimelineComponent.h"
 #include "GameFramework/Actor.h"
 #include "InteractInterface.h"
 #include "InteractableBase.generated.h"
+
+class UCurveFloat;
 
 UCLASS()
 class REBORN_2022_API AInteractableBase : public AActor, public IInteractInterface
@@ -16,9 +19,25 @@ public:
 	// Sets default values for this actor's properties
 	AInteractableBase();
 
+	UFUNCTION()
+  void TimelineProgress(float Value);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+  FTimeline CurveTimeline;
+
+  UPROPERTY(EditAnywhere, Category = "Timeline")
+  UCurveFloat* CurveFloat;
+
+  UPROPERTY()
+  FVector StartLoc;
+  UPROPERTY()
+  FVector EndLoc;
+
+  UPROPERTY(EditAnywhere, Category="Timeline")
+  float ZOffset;
 
 public:	
 	// Called every frame

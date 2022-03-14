@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "RB_CC_MyCharacter.generated.h"
 
@@ -11,12 +12,14 @@ class USpringArmComponent;
 class UCameraComponent;
 class UStaticMeshComponent;
 class UMatineeCameraShake;
+class UCurveFloat;
 
 struct ForwardTraceHitInformation {
   bool HadHit;
   FVector Start;
   FVector End;
   FHitResult HitResult;
+  FRotator Rot;
 };
 
 UCLASS()
@@ -42,6 +45,10 @@ public:
     const FHitResult& SweepResult);
 
 
+  UPROPERTY(EditAnywhere, Category="Spawning")
+  TSubclassOf<AActor> ActorToSpawn;
+
+
 protected:
   // Called when the game starts or when spawned
   //virtual void BeginPlay() override;
@@ -51,6 +58,9 @@ protected:
   void TurnAtRate(float Value);
   void LookUpAtRate(float Value);
   void InteractPressed();
+
+  UFUNCTION()
+  void SpawnActor();
 
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
   float BaseTurnRate;
@@ -68,22 +78,25 @@ protected:
 
 
   //Impulse
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(EditAnywhere, Category = "ImpulseForce");
   float ImpulseForce;
   void FireForward();
 
   //Radial Impulse
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(EditAnywhere, Category = "RadialForce");
   bool ApplyRadialForce;
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(EditAnywhere, Category = "RadialForce");
   float ImpactRadius;
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(EditAnywhere, Category = "RadialForce");
   float RadialImpactForce;
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(EditAnywhere, Category = "RadialForce");
   bool UseActorsCenterOfMassInCollisionCalculation;
 
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(EditAnywhere, Category = "Camera");
   TSubclassOf<UMatineeCameraShake> CameraShake;
+
+  UPROPERTY(EditAnywhere, Category = "Timeline")
+  UCurveFloat* CurveFloat;
 
 public:	
   // Called every frame
@@ -92,6 +105,8 @@ public:
   // Called to bind functionality to input
   virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+  virtual void Landed(const FHitResult& Hit) override;
+
 
 private:
   AActor* FocusedActor;
@@ -99,5 +114,17 @@ private:
   void CameraShakeDemo(float Scale);
 
   ForwardTraceHitInformation GetForwardTraceHitInformation();
+
+  void SpawnActorAtLocation(FVector Location, FRotator Rotation);
+
+  UPROPERTY()
+  FVector StartScale;
+  UPROPERTY()
+  FVector TargetScale;
+  UPROPERTY()
+  FTimeline SquashTimeline;
+
+  UFUNCTION() 
+  void SquashProgress(float Value);
 
 };
