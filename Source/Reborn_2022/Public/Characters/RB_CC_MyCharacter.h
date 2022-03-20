@@ -13,6 +13,8 @@ class UCameraComponent;
 class UStaticMeshComponent;
 class UMatineeCameraShake;
 class UCurveFloat;
+class URB_ACC_HealthComponent;
+class URB_AC_ActorDebugger;
 
 struct ForwardTraceHitInformation {
   bool HadHit;
@@ -20,7 +22,9 @@ struct ForwardTraceHitInformation {
   FVector End;
   FHitResult HitResult;
   FRotator Rot;
+  bool Error;
 };
+
 
 UCLASS()
 class REBORN_2022_API ARB_CC_MyCharacter : public ACharacter
@@ -40,6 +44,10 @@ public:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player");
   UStaticMeshComponent* StaticMeshComp;
 
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health");
+  URB_ACC_HealthComponent* HealthComponent;
+
   UFUNCTION()
   void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
     const FHitResult& SweepResult);
@@ -48,19 +56,19 @@ public:
   UPROPERTY(EditAnywhere, Category="Spawning")
   TSubclassOf<AActor> ActorToSpawn;
 
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Debugger");
+  URB_AC_ActorDebugger* ActorDebuggerComp;
+
 
 protected:
   // Called when the game starts or when spawned
-  //virtual void BeginPlay() override;
+  virtual void BeginPlay() override;
 
   void MoveForward(float Value);
   void MoveRight(float Value);
   void TurnAtRate(float Value);
   void LookUpAtRate(float Value);
   void InteractPressed();
-
-  UFUNCTION()
-  void SpawnActor();
 
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
   float BaseTurnRate;
@@ -76,11 +84,27 @@ protected:
   void TraceForward();
   void TraceForward_Implementation();
 
+  UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Network")
+  void FireForward();
+
+  UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Network")
+  void SpawnActorAtLocation();
+
+
+  UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Network")
+  void AddClientOnScreenDebugMessage(int32 Key, float TimeToDisplay, FColor DisplayColor, const FString& DebugMessage);
+
+  UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category = "Network")
+  void SpawnExplosion(FVector Location, FVector Scale);
+
+
+  UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Network")
+  void AddClientDrawDebugSphere(const UWorld* InWorld, FVector const& Center, float Radius, int32 Segments, FColor const& Color, bool bPersistentLines = false, float LifeTime = -1.f);
+
 
   //Impulse
   UPROPERTY(EditAnywhere, Category = "ImpulseForce");
   float ImpulseForce;
-  void FireForward();
 
   //Radial Impulse
   UPROPERTY(EditAnywhere, Category = "RadialForce");
@@ -97,6 +121,10 @@ protected:
 
   UPROPERTY(EditAnywhere, Category = "Timeline")
   UCurveFloat* CurveFloat;
+
+
+  UPROPERTY(EditAnywhere, Category = "RadialForce");
+  UParticleSystem* RadialExplosionEffect;
 
 public:	
   // Called every frame
@@ -115,7 +143,6 @@ private:
 
   ForwardTraceHitInformation GetForwardTraceHitInformation();
 
-  void SpawnActorAtLocation(FVector Location, FRotator Rotation);
 
   UPROPERTY()
   FVector StartScale;

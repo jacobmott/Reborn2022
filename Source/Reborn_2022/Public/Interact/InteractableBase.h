@@ -9,6 +9,7 @@
 #include "InteractableBase.generated.h"
 
 class UCurveFloat;
+class URB_AC_ActorDebugger;
 
 UCLASS()
 class REBORN_2022_API AInteractableBase : public AActor, public IInteractInterface
@@ -21,6 +22,9 @@ public:
 
 	UFUNCTION()
   void TimelineProgress(float Value);
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
+  URB_AC_ActorDebugger* ActorDebuggerComp;
 
 protected:
 	// Called when the game starts or when spawned
