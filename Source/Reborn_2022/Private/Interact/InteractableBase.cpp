@@ -2,8 +2,7 @@
 
 
 #include "Interact/InteractableBase.h"
-#include "RB_AC_ActorDebugger.h"
-
+#include "Kismet/KismetSystemLibrary.h"
 
 static const int32 DEBUG_ALL = 1;
 static const int32 DEBUG_OTHER = 2;
@@ -17,7 +16,6 @@ AInteractableBase::AInteractableBase()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	ActorDebuggerComp = CreateDefaultSubobject<URB_AC_ActorDebugger>(TEXT("ActorDebuggerComp"));
 
 }
 
@@ -31,8 +29,6 @@ void AInteractableBase::TimelineProgress(float Value)
 void AInteractableBase::BeginPlay()
 {
 	Super::BeginPlay();
-
-	ActorDebuggerComp->AddDebuggerActor(this);
 
 	if (CurveFloat) {
 		FOnTimelineFloat TimelineProgress;
@@ -61,7 +57,7 @@ void AInteractableBase::OnInteract_Implementation(AActor* Caller)
 	//if (DebugInteractableBase == DEBUG_INTERACT || DebugInteractableBase == DEBUG_ALL) {
   //  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Orange, TEXT("On Interact"));
   //}
-	ActorDebuggerComp->PrintString(GetWorld(), TEXT("On Interact"), true, false, FColor::Green, ActorDebuggerComp->GetGroupEnumValue(1), this);
+	 UKismetSystemLibrary::PrintString(GetWorld(), TEXT("On Interact"), true, false, FColor::Green, 3.0f);
 	Destroy();
 }
 
@@ -71,7 +67,7 @@ void AInteractableBase::StartFocus_Implementation()
   //if (DebugInteractableBase == DEBUG_INTERACT || DebugInteractableBase == DEBUG_ALL) {
   //  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Orange, TEXT("Start Focus"));
   //}
-	ActorDebuggerComp->PrintString(GetWorld(), TEXT("Start Focus"), true, false, FColor::Green, ActorDebuggerComp->GetGroupEnumValue(1), this);
+	 UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Start Focus"), true, false, FColor::Green, 3.0f);
 }
 
 void AInteractableBase::EndFocus_Implementation()
@@ -79,6 +75,6 @@ void AInteractableBase::EndFocus_Implementation()
   //if (DebugInteractableBase == DEBUG_INTERACT || DebugInteractableBase == DEBUG_ALL) {
   //  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, TEXT("End Focus"));
   //}
-	ActorDebuggerComp->PrintString(GetWorld(), TEXT("End Focus"), true, false, FColor::Green, ActorDebuggerComp->GetGroupEnumValue(1), this);
+	 UKismetSystemLibrary::PrintString(GetWorld(), TEXT("End Focus"), true, false, FColor::Green, 3.0f);
 }
 

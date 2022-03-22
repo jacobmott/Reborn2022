@@ -14,7 +14,6 @@ class UStaticMeshComponent;
 class UMatineeCameraShake;
 class UCurveFloat;
 class URB_ACC_HealthComponent;
-class URB_AC_ActorDebugger;
 
 struct ForwardTraceHitInformation {
   bool HadHit;
@@ -55,9 +54,6 @@ public:
 
   UPROPERTY(EditAnywhere, Category="Spawning")
   TSubclassOf<AActor> ActorToSpawn;
-
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Debugger");
-  URB_AC_ActorDebugger* ActorDebuggerComp;
 
 
 protected:

@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "RB_AC_PainActor.generated.h"
 
-class URB_AC_ActorDebugger;
 
 UCLASS()
 class REBORN_2022_API ARB_AC_PainActor : public AActor
@@ -28,9 +27,6 @@ public:
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
   UStaticMeshComponent* StaticMeshComp;
-
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-  URB_AC_ActorDebugger* ActorDebuggerComp;
 
 
 protected:

@@ -23,7 +23,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-#include "RB_AC_ActorDebugger.h"
 
 
 static const int32 DEBUG_ALL = 1;
@@ -54,8 +53,6 @@ ARB_CC_MyCharacter::ARB_CC_MyCharacter()
 
   HealthComponent = CreateDefaultSubobject<URB_ACC_HealthComponent>(TEXT("HealthComp"));
 
-
-  ActorDebuggerComp = CreateDefaultSubobject<URB_AC_ActorDebugger>(TEXT("ActorDebuggerComp"));
 
   BaseTurnRate = 45.0f;
   BaseLookUpAtRate = 45.0f;
@@ -91,7 +88,6 @@ void ARB_CC_MyCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedCom
 void ARB_CC_MyCharacter::BeginPlay()
 {
  	Super::BeginPlay();
-  ActorDebuggerComp->AddDebuggerActor(this);
   //If this doesnt work from including it in the contstructor then you should add it here and enable/uncomment begin play
   //StaticMeshComp->OnComponentBeginOverlap.AddDynamic(this, &ARB_CC_MyCharacter::OnOverlapBegin);
 
@@ -209,13 +205,13 @@ void ARB_CC_MyCharacter::FireForward_Implementation(){
   if (!HasAuthority()) {
     //this can never happen really, probably dont need this block, its almost guarrantee/assumed that this function
     //is called by the server
-    ActorDebuggerComp->PrintString(GetWorld(), TEXT("I have no authority to fire, so not firing "), true, false, FColor::Orange, ActorDebuggerComp->GetGroupEnumValue(1), this);
+     UKismetSystemLibrary::PrintString(GetWorld(), TEXT("I have no authority to fire, so not firing "), true, false, FColor::Orange, 3.0f);
     return; 
   }
 
-  ActorDebuggerComp->PrintString(GetWorld(), TEXT("I have authority to fire, so firing "), true, false, FColor::Orange, ActorDebuggerComp->GetGroupEnumValue(1), this);
+   UKismetSystemLibrary::PrintString(GetWorld(), TEXT("I have authority to fire, so firing "), true, false, FColor::Orange, 3.0f);
   FString IntAsString222 = FString::FromInt(DebugMyCharacter);
-  ActorDebuggerComp->PrintString(GetWorld(), TEXT("DebugMyCharacter: ") + IntAsString222, true, false, FColor::Orange, ActorDebuggerComp->GetGroupEnumValue(1), this);
+   UKismetSystemLibrary::PrintString(GetWorld(), TEXT("DebugMyCharacter: ") + IntAsString222, true, false, FColor::Orange, 3.0f);
 
   struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation();
   if (TraceInfo.Error) {
@@ -233,9 +229,9 @@ void ARB_CC_MyCharacter::FireForward_Implementation(){
   if (ApplyRadialForce){
 
     FString IntAsString2 = FString::FromInt(RadialImpactForce);
-    ActorDebuggerComp->PrintString(GetWorld(), TEXT("RadialImpactForce: ") + IntAsString2, true, false, FColor::Orange, ActorDebuggerComp->GetGroupEnumValue(1), this);
+     UKismetSystemLibrary::PrintString(GetWorld(), TEXT("RadialImpactForce: ") + IntAsString2, true, false, FColor::Orange, 3.0f);
     FString IntAsString3 = FString::FromInt(ImpactRadius);
-    ActorDebuggerComp->PrintString(GetWorld(), TEXT("ImpactRadius: ") + IntAsString3, true, false, FColor::Orange, ActorDebuggerComp->GetGroupEnumValue(1), this);
+     UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ImpactRadius: ") + IntAsString3, true, false, FColor::Orange, 3.0f);
     FCollisionShape SphereCollision = FCollisionShape::MakeSphere(ImpactRadius);
     //Lets apply some radial force, so we can move actors around the actor we just hit
     TArray<FHitResult> HitResultsFromRadialForce;
@@ -253,7 +249,7 @@ void ARB_CC_MyCharacter::FireForward_Implementation(){
     DrawDebugSphere(GetWorld(), HitResult.Location, ImpactRadius, 35, FColor::Orange, false, 3.0f);
     int results = HitResultsFromRadialForce.Num();
     FString IntAsString = FString::FromInt(results);
-    ActorDebuggerComp->PrintString(GetWorld(), IntAsString, true, false, FColor::Orange, ActorDebuggerComp->GetGroupEnumValue(1), this);
+    UKismetSystemLibrary::PrintString(GetWorld(), IntAsString, true, false, FColor::Orange, 3.0f);
     SpawnExplosion(HitResult.Location, FVector(ImpactRadius, ImpactRadius, ImpactRadius));
     
     //if (DidSweepHit){
@@ -264,7 +260,7 @@ void ARB_CC_MyCharacter::FireForward_Implementation(){
         }
         //Do we have a static mesh for what we hit? otherwise return
         UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Hit.GetActor()->GetRootComponent());
-        ActorDebuggerComp->PrintString(GetWorld(), TEXT("Sweeped across: ") + Hit.GetActor()->GetName(), true, false, FColor::Orange, ActorDebuggerComp->GetGroupEnumValue(1), this);
+         UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Sweeped across: ") + Hit.GetActor()->GetName(), true, false, FColor::Orange, 3.0f);
         if (MeshComp) {
           AddClientDrawDebugSphere(GetWorld(), HitResult.Location, 20.0f, 35, FColor::Red, false, 3.0f);
           if (DebugMyCharacter == DEBUG_FIREFORWARD || DebugMyCharacter == DEBUG_ALL) {
@@ -272,7 +268,7 @@ void ARB_CC_MyCharacter::FireForward_Implementation(){
             DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(ImpactRadius, 0.0f, 0.0f)), FColor::Red, false, 3.0f, 0, 10.0f);
             DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(0.0f, ImpactRadius, 0.0f)), FColor::Red, false, 3.0f, 0, 10.0f);
             DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(0.0f, 0.0f, ImpactRadius)), FColor::Red, false, 3.0f, 0, 10.0f);
-            ActorDebuggerComp->PrintString(GetWorld(), TEXT("Had mesh"), true, false, FColor::Orange, ActorDebuggerComp->GetGroupEnumValue(1), this);
+             UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Had mesh"), true, false, FColor::Orange, 3.0f);
             //https://forums.unrealengine.com/t/how-to-find-center-of-mass/285687
             //https://cpp.hotexamples.com/examples/-/PxRigidBody/addForce/cpp-pxrigidbody-addforce-method-examples.html
             DrawDebugSphere(GetWorld(), MeshComp->GetBodyInstance()->GetCOMPosition(), 10.0f, 32, FColor::Orange, false, 3.0f);
@@ -297,11 +293,11 @@ void ARB_CC_MyCharacter::FireForward_Implementation(){
 
           float Mag = PDelta.magnitude(); // Distance from COM to origin, in Unreal scale : @todo: do we still need conversion scale?
           FString IntAsString33 = FString::FromInt(Mag);
-          ActorDebuggerComp->PrintString(GetWorld(), TEXT("Mag is: ") + IntAsString33, true, false, FColor::Orange, ActorDebuggerComp->GetGroupEnumValue(1), this);
+           UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Mag is: ") + IntAsString33, true, false, FColor::Orange, 3.0f);
           // If COM is outside radius, do nothing.
           if (Mag > ImpactRadius)
           {
-            ActorDebuggerComp->PrintString(GetWorld(), TEXT("WTF!"), true, false, FColor::Orange, ActorDebuggerComp->GetGroupEnumValue(1), this);
+             UKismetSystemLibrary::PrintString(GetWorld(), TEXT("WTF!"), true, false, FColor::Orange, 3.0f);
           }
 
           MeshComp->AddRadialImpulse(HitResult.Location, RealDistanceFromHitOriginToActorCOM, RadialImpactForce, ERadialImpulseFalloff::RIF_Constant, true);
