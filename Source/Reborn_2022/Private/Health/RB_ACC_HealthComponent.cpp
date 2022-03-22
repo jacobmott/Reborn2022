@@ -2,6 +2,7 @@
 
 
 #include "Health/RB_ACC_HealthComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values for this component's properties
 URB_ACC_HealthComponent::URB_ACC_HealthComponent()
@@ -27,13 +28,18 @@ void URB_ACC_HealthComponent::BeginPlay()
     Owner->OnTakeAnyDamage.AddDynamic(this, &URB_ACC_HealthComponent::HandleTakeAnyDamage);
   }
 
+  SetIsReplicated(true);
+
   // ...
   
 }
 
 void URB_ACC_HealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
+  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_ACC_HealthComponent: HandleTakeAnyDamage: "), true, false, FColor::Red, 5.0f);
+  //GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange, TEXT("HandleTakeAnyDamage! here1 "));
   if (Damage < 0) {
+    //GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange, TEXT("HandleTakeAnyDamage! Damage is less than 0 "));
     return;
   }
 
