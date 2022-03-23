@@ -14,6 +14,8 @@ class UStaticMeshComponent;
 class UMatineeCameraShake;
 class UCurveFloat;
 class URB_ACC_HealthComponent;
+class URB_UserWidget;
+class UWidgetComponent;
 
 struct ForwardTraceHitInformation {
   bool HadHit;
@@ -34,27 +36,38 @@ public:
   // Sets default values for this character's properties
   ARB_CC_MyCharacter();
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
   USpringArmComponent* SpringArmComp;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
   UCameraComponent* CameraComp;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player");
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
   UStaticMeshComponent* StaticMeshComp;
 
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health");
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
   URB_ACC_HealthComponent* HealthComponent;
 
   UFUNCTION()
   void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
     const FHitResult& SweepResult);
 
-
   UPROPERTY(EditAnywhere, Category="Spawning")
   TSubclassOf<AActor> ActorToSpawn;
 
+  
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "HUD")
+  TSubclassOf<URB_UserWidget> HudClass;
+
+  URB_UserWidget* Hud;
+
+  void UpdateHud();
+  void UpdateFloatingHealthHud();
+
+  //Floating widget
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
+  UWidgetComponent* MyHealthWidget;
 
 protected:
   // Called when the game starts or when spawned
@@ -66,13 +79,13 @@ protected:
   void LookUpAtRate(float Value);
   void InteractPressed();
 
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
   float BaseTurnRate;
 
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
   float BaseLookUpAtRate;
 
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction");
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
   float TraceDistance;
 
 
@@ -98,29 +111,40 @@ protected:
   void AddClientDrawDebugSphere(const UWorld* InWorld, FVector const& Center, float Radius, int32 Segments, FColor const& Color, bool bPersistentLines = false, float LifeTime = -1.f);
 
 
+  FTimerHandle TimerHandle_Health;
+
+  float Current = 0.0f;
+  float MaxHealth = 100.0f;
+
+  void SetPercent();
+
   //Impulse
-  UPROPERTY(EditAnywhere, Category = "ImpulseForce");
+  UPROPERTY(EditAnywhere, Category = "ImpulseForce")
   float ImpulseForce;
 
   //Radial Impulse
-  UPROPERTY(EditAnywhere, Category = "RadialForce");
+  UPROPERTY(EditAnywhere, Category = "RadialForce")
   bool ApplyRadialForce;
-  UPROPERTY(EditAnywhere, Category = "RadialForce");
+  UPROPERTY(EditAnywhere, Category = "RadialForce")
   float ImpactRadius;
-  UPROPERTY(EditAnywhere, Category = "RadialForce");
+  UPROPERTY(EditAnywhere, Category = "RadialForce")
   float RadialImpactForce;
-  UPROPERTY(EditAnywhere, Category = "RadialForce");
+  UPROPERTY(EditAnywhere, Category = "RadialForce")
   bool UseActorsCenterOfMassInCollisionCalculation;
 
-  UPROPERTY(EditAnywhere, Category = "Camera");
+  UPROPERTY(EditAnywhere, Category = "Camera")
   TSubclassOf<UMatineeCameraShake> CameraShake;
 
   UPROPERTY(EditAnywhere, Category = "Timeline")
   UCurveFloat* CurveFloat;
 
 
-  UPROPERTY(EditAnywhere, Category = "RadialForce");
+  UPROPERTY(EditAnywhere, Category = "RadialForce")
   UParticleSystem* RadialExplosionEffect;
+
+
+
+
 
 public:	
   // Called every frame

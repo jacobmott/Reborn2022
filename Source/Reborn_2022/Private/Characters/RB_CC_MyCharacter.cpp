@@ -11,7 +11,10 @@
 #include "Interact/InteractInterface.h"
 #include "MatineeCameraShake.h"
 #include "Health/RB_ACC_HealthComponent.h"
-
+#include "Widgets/RB_UserWidget.h"
+#include "Components/ProgressBar.h"
+#include "Components/WidgetComponent.h"
+#include "UObject/ConstructorHelpers.h"
 
 #include "PhysXPublic.h"
 #include "PhysxUserData.h"
@@ -53,7 +56,6 @@ ARB_CC_MyCharacter::ARB_CC_MyCharacter()
 
   HealthComponent = CreateDefaultSubobject<URB_ACC_HealthComponent>(TEXT("HealthComp"));
 
-
   BaseTurnRate = 45.0f;
   BaseLookUpAtRate = 45.0f;
   TraceDistance = 2000.0f;
@@ -70,6 +72,18 @@ ARB_CC_MyCharacter::ARB_CC_MyCharacter()
   TargetScale = FVector(1.3f, 1.3f, 0.8f);
   SquashTimeline;
 
+  MyHealthWidget = CreateDefaultSubobject<UWidgetComponent>("MyHealthWidget");
+  static ConstructorHelpers::FClassFinder<UUserWidget> MyHealthWidgetObj(TEXT("/Game/MyStuff/Blueprints/Widgets/BP_W_FloatingHealth"));
+  if (MyHealthWidgetObj.Succeeded()) {
+    MyHealthWidget->SetWidgetClass(MyHealthWidgetObj.Class);
+  }
+  else
+  {
+    UE_LOG(LogTemp, Warning, TEXT("MyHealthWidgetObj widget could not initialize on InteractibleActor"));
+  }
+  //CreateWidget<UUserWidget>(this, MyHealthWidgetObj.Class);
+
+
 
 }
 
@@ -84,14 +98,65 @@ void ARB_CC_MyCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedCom
   }
 }
 
+
+void ARB_CC_MyCharacter::UpdateHud()
+{
+
+  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_CC_MyCharacter:UpdateHud HEREHEHEHRERH!1: ")+GetName(), true, false, FColor::Orange, 30.0f);
+  if (Hud) {
+
+    float value = HealthComponent->GetHealth() / HealthComponent->GetDefaultHealth();
+    FString TheFloatStr = FString::SanitizeFloat(value);
+    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_CC_MyCharacter:UpdateHud value")+ TheFloatStr, true, false, FColor::Orange, 3.0f);
+    Hud->ProgressHealthBar->SetPercent(value);
+  }
+
+  
+
+}
+
+void ARB_CC_MyCharacter::UpdateFloatingHealthHud()
+{
+  // MyHealthWidget
+   //UUserWidget* NewWidget = NewObject<UUserWidget>(Outer, UserWidgetClass, InstanceName, RF_Transactional);
+  float value = HealthComponent->GetHealth() / HealthComponent->GetDefaultHealth();
+  UUserWidget* T = MyHealthWidget->GetWidget();
+  UProgressBar* PB = Cast<UProgressBar>(T->GetWidgetFromName( FName(TEXT("ProgressBar_0")) ) ) ;
+  PB->SetPercent(value);
+}
+
 // Called when the game starts or when spawned
 void ARB_CC_MyCharacter::BeginPlay()
 {
  	Super::BeginPlay();
   //If this doesnt work from including it in the contstructor then you should add it here and enable/uncomment begin play
   //StaticMeshComp->OnComponentBeginOverlap.AddDynamic(this, &ARB_CC_MyCharacter::OnOverlapBegin);
+  Hud = CreateWidget<URB_UserWidget>(GetGameInstance(), HudClass, FName(TEXT("Hud")));
+  if (Hud)
+  {
+    //APlayerController* const PlayerController = Cast<APlayerController>(GetController());
+    //Hud->SetOwningPlayer(PlayerController);
+    //Hud->SetOwningPlayer()
+    Hud->AddToViewport();
+    float value = HealthComponent->GetHealth() / HealthComponent->GetDefaultHealth();
+    Hud->ProgressHealthBar->SetPercent(value);
+ 
+    //GetWorldTimerManager().SetTimer(TimerHandle_Health, this, &ARB_CC_MyCharacter::SetPercent, 2.0f, true, 2.0f);
+  }
+  MyHealthWidget->SetTwoSided(true);
+  MyHealthWidget->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
 }
+
+//void ARB_CC_MyCharacter::SetPercent()
+//{
+//  Current += 10.0f;
+//  float Value = Current / MaxHealth;
+//  Hud->ProgressHealthBar->SetPercent(Value);
+//  if (Current >= 100.0f) {
+//    GetWorldTimerManager().ClearTimer(TimerHandle_Health);
+//  }
+//}
 
 void ARB_CC_MyCharacter::MoveForward(float Value)
 {

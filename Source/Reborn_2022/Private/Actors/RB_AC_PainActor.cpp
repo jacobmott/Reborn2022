@@ -107,9 +107,7 @@ void ARB_AC_PainActor::ApplyDmg(AActor* OverlappedActor)
   // UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ApplyDmg"), true, false, FColor::Red, 5.0f);
   //Server needs to handle damage, otherwise client and server will handle damage
   //Client may want to do something here though, like particle effects
-  if (HasAuthority()){
-    OverlappedActor->TakeDamage(DamageAmount, FDamageEvent(DamageType), nullptr, GetOwner());
-  }
+  OverlappedActor->TakeDamage(DamageAmount, FDamageEvent(DamageType), nullptr, GetOwner());
 }
 
 

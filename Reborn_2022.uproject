@@ -11,7 +11,8 @@
 			"AdditionalDependencies": [
 				"Engine",
 				"GameplayCameras",
-				"CoreUObject"
+				"CoreUObject",
+				"UMG"
 			]
 		}
 	]
