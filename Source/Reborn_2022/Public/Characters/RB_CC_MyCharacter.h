@@ -69,6 +69,21 @@ public:
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
   UWidgetComponent* MyHealthWidget;
 
+  //Floating widget
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
+  UWidgetComponent* MyHealthWidget2;
+
+
+  //Floating widget
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
+  UWidgetComponent* MyHealthWidget3;
+
+
+  //Floating widget
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
+  UWidgetComponent* MyHealthWidget4;
+
+
 protected:
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;
@@ -100,8 +115,11 @@ protected:
   void SpawnActorAtLocation();
 
 
-  UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Network")
-  void AddClientOnScreenDebugMessage(int32 Key, float TimeToDisplay, FColor DisplayColor, const FString& DebugMessage);
+  UFUNCTION()
+  void FireForwardClientTrace();
+
+  //UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Network")
+  //void AddClientOnScreenDebugMessage(int32 Key, float TimeToDisplay, FColor DisplayColor, const FString& DebugMessage);
 
   UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category = "Network")
   void SpawnExplosion(FVector Location, FVector Scale);
@@ -161,7 +179,7 @@ private:
 
   void CameraShakeDemo(float Scale);
 
-  ForwardTraceHitInformation GetForwardTraceHitInformation();
+  ForwardTraceHitInformation GetForwardTraceHitInformation(bool DrawDebugTraceLine);
 
 
   UPROPERTY()

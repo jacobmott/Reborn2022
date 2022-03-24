@@ -34,8 +34,6 @@ void URB_ACC_HealthComponent::BeginPlay()
   }
 
   SetIsReplicated(true);
-
-  // ...
   
 }
 
@@ -43,6 +41,17 @@ void URB_ACC_HealthComponent::BeginPlay()
 void URB_ACC_HealthComponent::OnRep_Health()
 {
   AActor* Owner = GetOwner();
+
+  ARB_CC_MyCharacter* MyCharacter = Cast<ARB_CC_MyCharacter>(Owner);
+  if (!MyCharacter) { return; }
+  AController* MyCharacterController = MyCharacter->GetController();
+  //If this is a valid character class and we control it.. then update our hud(health)
+  if (MyCharacterController && MyCharacterController->IsLocalPlayerController()) {
+    MyCharacter->UpdateHud();
+  }
+  MyCharacter->UpdateFloatingHealthHud();
+
+
   //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_ACC_HealthComponent: OnRep_Health: ")+ Owner->GetName(), true, false, FColor::Green, 30.0f);
   //APawn* tempPawn = Cast<APawn>(Owner);
   //if (tempPawn->IsLocallyControlled()) {
@@ -51,16 +60,8 @@ void URB_ACC_HealthComponent::OnRep_Health()
   //AActor* PCActor = Cast<AActor>(PC);
   //if ( Owner == GetWorld()->GetFirstPlayerController()->GetOwner() ) {
   //if ( Owner == PCActor) {
-  ARB_CC_MyCharacter* MyCharacter = Cast<ARB_CC_MyCharacter>(Owner);
-  if (!MyCharacter){ return ; }
-  AController* MyCharacterController = MyCharacter->GetController();
-  //If this is a valid character class and we control it.. then update our hud(health)
-  if (MyCharacterController && MyCharacterController->IsLocalPlayerController()) {
-    //ARB_CC_MyCharacter* MyCharacter = Cast<ARB_CC_MyCharacter>(Owner);
-    MyCharacter->UpdateHud();
-  }
-  MyCharacter->UpdateFloatingHealthHud();
-  //}
+  //ARB_CC_MyCharacter* MyCharacter = Cast<ARB_CC_MyCharacter>(Owner);
+
 }
 
 void URB_ACC_HealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
@@ -86,7 +87,7 @@ void URB_ACC_HealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Da
   MyCharacter->UpdateFloatingHealthHud();
   if (!MyCharacterController) { return; }
   if (!MyCharacterController->IsLocalPlayerController()) {
-    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_ACC_HealthComponent: HandleTakeAnyDamage: DamagedActor == CurrentOwnerThatTookDmg? Yes!"), true, false, FColor::Blue, 30.0f);
+    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_ACC_HealthComponent: HandleTakeAnyDamage: DamagedActor == CurrentOwnerThatTookDmg? Yes!"), true, false, FColor::Blue, 30.0f);
     return;
   }
   MyCharacter->UpdateHud();

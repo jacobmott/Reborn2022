@@ -15,6 +15,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/WidgetComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Components/CapsuleComponent.h"
 
 #include "PhysXPublic.h"
 #include "PhysxUserData.h"
@@ -66,6 +67,7 @@ ARB_CC_MyCharacter::ARB_CC_MyCharacter()
   ApplyRadialForce = true;
   ImpactRadius = 200.0f;
   RadialImpactForce = 2000.0f;
+  //NOTE: WOW! this was causing the original issue i was seeing
   UseActorsCenterOfMassInCollisionCalculation = true;
 
   StartScale = FVector(1, 1, 1);
@@ -73,15 +75,20 @@ ARB_CC_MyCharacter::ARB_CC_MyCharacter()
   SquashTimeline;
 
   MyHealthWidget = CreateDefaultSubobject<UWidgetComponent>("MyHealthWidget");
+  MyHealthWidget2 = CreateDefaultSubobject<UWidgetComponent>("MyHealthWidget2");
+  MyHealthWidget3 = CreateDefaultSubobject<UWidgetComponent>("MyHealthWidget3");
+  MyHealthWidget4 = CreateDefaultSubobject<UWidgetComponent>("MyHealthWidget4");
   static ConstructorHelpers::FClassFinder<UUserWidget> MyHealthWidgetObj(TEXT("/Game/MyStuff/Blueprints/Widgets/BP_W_FloatingHealth"));
   if (MyHealthWidgetObj.Succeeded()) {
     MyHealthWidget->SetWidgetClass(MyHealthWidgetObj.Class);
+    MyHealthWidget2->SetWidgetClass(MyHealthWidgetObj.Class);
+    MyHealthWidget3->SetWidgetClass(MyHealthWidgetObj.Class);
+    MyHealthWidget4->SetWidgetClass(MyHealthWidgetObj.Class);
   }
   else
   {
     UE_LOG(LogTemp, Warning, TEXT("MyHealthWidgetObj widget could not initialize on InteractibleActor"));
   }
-  //CreateWidget<UUserWidget>(this, MyHealthWidgetObj.Class);
 
 
 
@@ -102,12 +109,12 @@ void ARB_CC_MyCharacter::OnOverlapBegin(class UPrimitiveComponent* OverlappedCom
 void ARB_CC_MyCharacter::UpdateHud()
 {
 
-  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_CC_MyCharacter:UpdateHud HEREHEHEHRERH!1: ")+GetName(), true, false, FColor::Orange, 30.0f);
+  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_CC_MyCharacter:UpdateHud HEREHEHEHRERH!1: ")+GetName(), true, false, FColor::Orange, 30.0f);
   if (Hud) {
 
     float value = HealthComponent->GetHealth() / HealthComponent->GetDefaultHealth();
     FString TheFloatStr = FString::SanitizeFloat(value);
-    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_CC_MyCharacter:UpdateHud value")+ TheFloatStr, true, false, FColor::Orange, 3.0f);
+    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_CC_MyCharacter:UpdateHud value")+ TheFloatStr, true, false, FColor::Orange, 3.0f);
     Hud->ProgressHealthBar->SetPercent(value);
   }
 
@@ -123,6 +130,19 @@ void ARB_CC_MyCharacter::UpdateFloatingHealthHud()
   UUserWidget* T = MyHealthWidget->GetWidget();
   UProgressBar* PB = Cast<UProgressBar>(T->GetWidgetFromName( FName(TEXT("ProgressBar_0")) ) ) ;
   PB->SetPercent(value);
+
+  UUserWidget* T2 = MyHealthWidget2->GetWidget();
+  UProgressBar* PB2 = Cast<UProgressBar>(T2->GetWidgetFromName(FName(TEXT("ProgressBar_0"))));
+  PB2->SetPercent(value);
+
+  UUserWidget* T3 = MyHealthWidget3->GetWidget();
+  UProgressBar* PB3 = Cast<UProgressBar>(T3->GetWidgetFromName(FName(TEXT("ProgressBar_0"))));
+  PB3->SetPercent(value);
+
+  UUserWidget* T4 = MyHealthWidget4->GetWidget();
+  UProgressBar* PB4 = Cast<UProgressBar>(T4->GetWidgetFromName(FName(TEXT("ProgressBar_0"))));
+  PB4->SetPercent(value);
+  UParticleSystemComponent* PC =  UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), RadialExplosionEffect, GetActorLocation(), FRotator::ZeroRotator, (FVector)(1.0f));
 }
 
 // Called when the game starts or when spawned
@@ -146,6 +166,14 @@ void ARB_CC_MyCharacter::BeginPlay()
   MyHealthWidget->SetTwoSided(true);
   MyHealthWidget->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
+  MyHealthWidget2->SetTwoSided(true);
+  MyHealthWidget2->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+
+  MyHealthWidget3->SetTwoSided(true);
+  MyHealthWidget3->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+
+  MyHealthWidget4->SetTwoSided(true);
+  MyHealthWidget4->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 }
 
 //void ARB_CC_MyCharacter::SetPercent()
@@ -211,10 +239,11 @@ void ARB_CC_MyCharacter::InteractPressed()
 void ARB_CC_MyCharacter::TraceForward_Implementation()
 {
 
-  struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation();
+  struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation(false);
   if (TraceInfo.Error) {
     return;
   }
+  //DrawDebugPoint(GetWorld(), TraceInfo.End, 5.0f, FColor::Red, false, true, -1.0f, 1);
   bool HadHit = TraceInfo.HadHit;
   FHitResult HitResult = TraceInfo.HitResult;
 
@@ -263,22 +292,26 @@ void ARB_CC_MyCharacter::CameraShakeDemo(float Scale)
 
 }
 
-
+void ARB_CC_MyCharacter::FireForwardClientTrace() {
+  if (!HasAuthority()) {
+    struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation(false);
+  }
+}
 
 void ARB_CC_MyCharacter::FireForward_Implementation(){
 
   if (!HasAuthority()) {
     //this can never happen really, probably dont need this block, its almost guarrantee/assumed that this function
     //is called by the server
-     UKismetSystemLibrary::PrintString(GetWorld(), TEXT("I have no authority to fire, so not firing "), true, false, FColor::Orange, 3.0f);
+    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("I have no authority to fire, so not firing "), true, false, FColor::Orange, 3.0f);
     return; 
   }
 
-   UKismetSystemLibrary::PrintString(GetWorld(), TEXT("I have authority to fire, so firing "), true, false, FColor::Orange, 3.0f);
+  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("I have authority to fire, so firing "), true, false, FColor::Orange, 3.0f);
   FString IntAsString222 = FString::FromInt(DebugMyCharacter);
-   UKismetSystemLibrary::PrintString(GetWorld(), TEXT("DebugMyCharacter: ") + IntAsString222, true, false, FColor::Orange, 3.0f);
+  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("DebugMyCharacter: ") + IntAsString222, true, false, FColor::Orange, 3.0f);
 
-  struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation();
+  struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation(false);
   if (TraceInfo.Error) {
     return;
   }
@@ -294,9 +327,9 @@ void ARB_CC_MyCharacter::FireForward_Implementation(){
   if (ApplyRadialForce){
 
     FString IntAsString2 = FString::FromInt(RadialImpactForce);
-     UKismetSystemLibrary::PrintString(GetWorld(), TEXT("RadialImpactForce: ") + IntAsString2, true, false, FColor::Orange, 3.0f);
+    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("RadialImpactForce: ") + IntAsString2, true, false, FColor::Orange, 3.0f);
     FString IntAsString3 = FString::FromInt(ImpactRadius);
-     UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ImpactRadius: ") + IntAsString3, true, false, FColor::Orange, 3.0f);
+    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ImpactRadius: ") + IntAsString3, true, false, FColor::Orange, 3.0f);
     FCollisionShape SphereCollision = FCollisionShape::MakeSphere(ImpactRadius);
     //Lets apply some radial force, so we can move actors around the actor we just hit
     TArray<FHitResult> HitResultsFromRadialForce;
@@ -311,10 +344,10 @@ void ARB_CC_MyCharacter::FireForward_Implementation(){
       FQuat::Identity, ECC_WorldStatic, SphereCollision);
     
     AddClientDrawDebugSphere(GetWorld(), HitResult.Location, ImpactRadius, 35, FColor::Orange, false, 3.0f);
-    DrawDebugSphere(GetWorld(), HitResult.Location, ImpactRadius, 35, FColor::Orange, false, 3.0f);
+    //DrawDebugSphere(GetWorld(), HitResult.Location, ImpactRadius, 35, FColor::Orange, false, 3.0f);
     int results = HitResultsFromRadialForce.Num();
     FString IntAsString = FString::FromInt(results);
-    UKismetSystemLibrary::PrintString(GetWorld(), IntAsString, true, false, FColor::Orange, 3.0f);
+    //UKismetSystemLibrary::PrintString(GetWorld(), IntAsString, true, false, FColor::Orange, 3.0f);
     SpawnExplosion(HitResult.Location, FVector(ImpactRadius, ImpactRadius, ImpactRadius));
     
     //if (DidSweepHit){
@@ -325,18 +358,18 @@ void ARB_CC_MyCharacter::FireForward_Implementation(){
         }
         //Do we have a static mesh for what we hit? otherwise return
         UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Hit.GetActor()->GetRootComponent());
-         UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Sweeped across: ") + Hit.GetActor()->GetName(), true, false, FColor::Orange, 3.0f);
+        //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Sweeped across: ") + Hit.GetActor()->GetName(), true, false, FColor::Orange, 3.0f);
         if (MeshComp) {
-          AddClientDrawDebugSphere(GetWorld(), HitResult.Location, 20.0f, 35, FColor::Red, false, 3.0f);
+          //AddClientDrawDebugSphere(GetWorld(), HitResult.Location, 20.0f, 35, FColor::Red, false, 3.0f);
           if (DebugMyCharacter == DEBUG_FIREFORWARD || DebugMyCharacter == DEBUG_ALL) {
-            DrawDebugSphere(GetWorld(), HitResult.Location, 20.0f, 35, FColor::Red, false, 3.0f);
-            DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(ImpactRadius, 0.0f, 0.0f)), FColor::Red, false, 3.0f, 0, 10.0f);
-            DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(0.0f, ImpactRadius, 0.0f)), FColor::Red, false, 3.0f, 0, 10.0f);
-            DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(0.0f, 0.0f, ImpactRadius)), FColor::Red, false, 3.0f, 0, 10.0f);
-             UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Had mesh"), true, false, FColor::Orange, 3.0f);
-            //https://forums.unrealengine.com/t/how-to-find-center-of-mass/285687
-            //https://cpp.hotexamples.com/examples/-/PxRigidBody/addForce/cpp-pxrigidbody-addforce-method-examples.html
-            DrawDebugSphere(GetWorld(), MeshComp->GetBodyInstance()->GetCOMPosition(), 10.0f, 32, FColor::Orange, false, 3.0f);
+            //DrawDebugSphere(GetWorld(), HitResult.Location, 20.0f, 35, FColor::Red, false, 3.0f);
+            //DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(ImpactRadius, 0.0f, 0.0f)), FColor::Red, false, 3.0f, 0, 10.0f);
+            //DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(0.0f, ImpactRadius, 0.0f)), FColor::Red, false, 3.0f, 0, 10.0f);
+            //DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(0.0f, 0.0f, ImpactRadius)), FColor::Red, false, 3.0f, 0, 10.0f);
+            //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Had mesh"), true, false, FColor::Orange, 3.0f);
+            ////https://forums.unrealengine.com/t/how-to-find-center-of-mass/285687
+            ////https://cpp.hotexamples.com/examples/-/PxRigidBody/addForce/cpp-pxrigidbody-addforce-method-examples.html
+            //DrawDebugSphere(GetWorld(), MeshComp->GetBodyInstance()->GetCOMPosition(), 10.0f, 32, FColor::Orange, false, 3.0f);
           }
 
           //float ActorCOMZPosDiffFromHitOriginZPos = FMath::Abs(MeshComp->GetBodyInstance()->GetCOMPosition().Z - HitResult.Location.Z);
@@ -358,17 +391,16 @@ void ARB_CC_MyCharacter::FireForward_Implementation(){
 
           float Mag = PDelta.magnitude(); // Distance from COM to origin, in Unreal scale : @todo: do we still need conversion scale?
           FString IntAsString33 = FString::FromInt(Mag);
-           UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Mag is: ") + IntAsString33, true, false, FColor::Orange, 3.0f);
+          //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Mag is: ") + IntAsString33, true, false, FColor::Orange, 3.0f);
           // If COM is outside radius, do nothing.
           if (Mag > ImpactRadius)
           {
-             UKismetSystemLibrary::PrintString(GetWorld(), TEXT("WTF!"), true, false, FColor::Orange, 3.0f);
+            //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("WTF!"), true, false, FColor::Orange, 3.0f);
           }
 
           MeshComp->AddRadialImpulse(HitResult.Location, RealDistanceFromHitOriginToActorCOM, RadialImpactForce, ERadialImpulseFalloff::RIF_Constant, true);
         }
       }
-    //}
   }
 
 
@@ -416,6 +448,7 @@ void ARB_CC_MyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
   PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ARB_CC_MyCharacter::InteractPressed);
   PlayerInputComponent->BindAction("SpawnActor", IE_Pressed, this, &ARB_CC_MyCharacter::SpawnActorAtLocation);
   PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ARB_CC_MyCharacter::FireForward);
+  PlayerInputComponent->BindAction("Fire2", IE_Pressed, this, &ARB_CC_MyCharacter::FireForwardClientTrace);
   PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
   PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
@@ -427,7 +460,7 @@ void ARB_CC_MyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 
 
-ForwardTraceHitInformation ARB_CC_MyCharacter::GetForwardTraceHitInformation()
+ForwardTraceHitInformation ARB_CC_MyCharacter::GetForwardTraceHitInformation(bool DrawDebugTraceLine)
 {
   FVector Loc;
   FRotator Rot;
@@ -439,14 +472,36 @@ ForwardTraceHitInformation ARB_CC_MyCharacter::GetForwardTraceHitInformation()
     Result.Error = true;
     return Result;
   }
+
+
   Controller->GetPlayerViewPoint(Loc, Rot);
 
-  FVector Start = Loc;
-  FVector End = Start + (Rot.Vector() * 2000);
+  //FVector StartCam = Loc;
+  
+  //FVector EndCam = StartCam + (Rot.Vector() * 4000);
 
+  //FVector SocketOffset = SpringArmComp->SocketOffset;
+  //FString TheFloatStrx = FString::SanitizeFloat(SocketOffset.X);
+  //FString TheFloatStry = FString::SanitizeFloat(SocketOffset.Y);
+  //FString TheFloatStrz = FString::SanitizeFloat(SocketOffset.Z);
+  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("X: ")+TheFloatStrx+TEXT(" -- ")TEXT("Y: ") + TheFloatStry + TEXT(" -- ")TEXT("Z: ") + TheFloatStrz, true, false, FColor::Orange, 3.0f);
+  //FVector Start = Loc;
+  //float HalfMeshSize = 50.0f;
+  //FVector Start = GetCapsuleComponent()->GetCenterOfMass() + (Rot.Vector() * HalfMeshSize);
+  //FVector Start = FVector(Loc.X, Loc.Y, GetActorLocation().Z);
+  //FVector End = Start + SocketOffset + (Rot.Vector() * 4000);
+  //FVector End = Start + (Rot.Vector() * 4000);
+
+  //Start =  End - (GetActorLocation() + Rot.Vector());
+  //Change the start to be the player location with a bit of forward offset
+
+  FVector Start = Loc;
+  FVector End = Start + (Rot.Vector() * 6000);
   FCollisionQueryParams TraceParams;
-  bool HadHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, TraceParams);
-  //DrawDebugLine(GetWorld(), Start, End, FColor::Orange, false, 2.0f, 0, 1.0f);
+  bool HadHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, TraceParams);
+  if (DrawDebugTraceLine){
+    DrawDebugLine(GetWorld(), Start, End, FColor::Orange, false, 1.0f, 0, 1.0f);
+  }
 
   Result.Error = false;
   Result.HadHit = HadHit;
@@ -462,11 +517,12 @@ ForwardTraceHitInformation ARB_CC_MyCharacter::GetForwardTraceHitInformation()
 void ARB_CC_MyCharacter::SpawnActorAtLocation_Implementation()
 {
 
+  //This is just here to remind the reader that this shoud be a server RPC(only done/called on the server)
   if (!HasAuthority()) {
     return;
   }
 
-  struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation();
+  struct ForwardTraceHitInformation TraceInfo = GetForwardTraceHitInformation(false);
   if (TraceInfo.Error) {
     return;
   }
@@ -480,12 +536,12 @@ void ARB_CC_MyCharacter::SpawnActorAtLocation_Implementation()
 }
 
 
-void ARB_CC_MyCharacter::AddClientOnScreenDebugMessage_Implementation(int32 Key, float TimeToDisplay, FColor DisplayColor, const FString& DebugMessage)
-{
-  if (DebugMyCharacter == DEBUG_FIREFORWARD || DebugMyCharacter == DEBUG_ALL) {
-    GEngine->AddOnScreenDebugMessage(Key, TimeToDisplay, DisplayColor, DebugMessage);
-  }
-}
+//void ARB_CC_MyCharacter::AddClientOnScreenDebugMessage_Implementation(int32 Key, float TimeToDisplay, FColor DisplayColor, const FString& DebugMessage)
+//{
+//  if (DebugMyCharacter == DEBUG_FIREFORWARD || DebugMyCharacter == DEBUG_ALL) {
+//    GEngine->AddOnScreenDebugMessage(Key, TimeToDisplay, DisplayColor, DebugMessage);
+//  }
+//}
 
 
 void ARB_CC_MyCharacter::SpawnExplosion_Implementation(FVector Location, FVector Scale)
