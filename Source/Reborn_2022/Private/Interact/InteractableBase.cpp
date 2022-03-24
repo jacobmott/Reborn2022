@@ -57,7 +57,7 @@ void AInteractableBase::OnInteract_Implementation(AActor* Caller)
 	//if (DebugInteractableBase == DEBUG_INTERACT || DebugInteractableBase == DEBUG_ALL) {
   //  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Orange, TEXT("On Interact"));
   //}
-	 UKismetSystemLibrary::PrintString(GetWorld(), TEXT("On Interact"), true, false, FColor::Green, 3.0f);
+	//UKismetSystemLibrary::PrintString(GetWorld(), TEXT("On Interact"), true, false, FColor::Green, 3.0f);
 	Destroy();
 }
 
@@ -67,7 +67,7 @@ void AInteractableBase::StartFocus_Implementation()
   //if (DebugInteractableBase == DEBUG_INTERACT || DebugInteractableBase == DEBUG_ALL) {
   //  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Orange, TEXT("Start Focus"));
   //}
-	 UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Start Focus"), true, false, FColor::Green, 3.0f);
+	//UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Start Focus"), true, false, FColor::Green, 3.0f);
 }
 
 void AInteractableBase::EndFocus_Implementation()
@@ -75,6 +75,6 @@ void AInteractableBase::EndFocus_Implementation()
   //if (DebugInteractableBase == DEBUG_INTERACT || DebugInteractableBase == DEBUG_ALL) {
   //  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, TEXT("End Focus"));
   //}
-	 UKismetSystemLibrary::PrintString(GetWorld(), TEXT("End Focus"), true, false, FColor::Green, 3.0f);
+	//UKismetSystemLibrary::PrintString(GetWorld(), TEXT("End Focus"), true, false, FColor::Green, 3.0f);
 }
 

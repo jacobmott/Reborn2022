@@ -27,7 +27,6 @@ void ARB_AC_PainActor::BeginPlay()
   StaticMeshComp->OnComponentBeginOverlap.AddDynamic(this, &ARB_AC_PainActor::OnOverlapBegin);
   StaticMeshComp->OnComponentEndOverlap.AddDynamic(this, &ARB_AC_PainActor::OnOverlapEnd);
 
-
 	SetReplicates(true);
 
 }
@@ -40,19 +39,19 @@ void ARB_AC_PainActor::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp,
     AActor* OverlappedActor = nullptr;
 
     if (OtherActor){
-       UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapBegin: OtherActor: ") + OtherActor->GetName(), true, false, FColor::Green, 3.0f);
+      //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapBegin: OtherActor: ") + OtherActor->GetName(), true, false, FColor::Green, 3.0f);
       OverlappedActor = OtherActor;
     }
     else if (OverlappedComp) {
-       UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapBegin: OverlappedComp:  ")+OverlappedComp->GetName(), true, false, FColor::Green, 3.0f);
+      //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapBegin: OverlappedComp:  ")+OverlappedComp->GetName(), true, false, FColor::Green, 3.0f);
       OverlappedActor = OverlappedComp->GetOwner();
     }
     else if (OtherComp) {
-       UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapBegin: OtherComp: ") + OtherComp->GetName(), true, false, FColor::Green, 3.0f);
+      //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapBegin: OtherComp: ") + OtherComp->GetName(), true, false, FColor::Green, 3.0f);
       OverlappedActor = OverlappedComp->GetOwner();
     }
     else {
-       UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapBegin: Didnt have anything? "), true, false, FColor::Green, 3.0f);
+      //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapBegin: Didnt have anything? "), true, false, FColor::Green, 3.0f);
       return;
     }
 
@@ -62,10 +61,10 @@ void ARB_AC_PainActor::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp,
     //Binding the function with specific values
     TimerDel.BindUFunction(this, FName("ApplyDmg"), OverlappedActor);
     FTimerHandle TimerHandle;
-    GetWorldTimerManager().SetTimer(TimerHandle, TimerDel, TickDmgTime, true);
+    GetWorldTimerManager().SetTimer(TimerHandle, TimerDel, TickDmgTime, true, 0.0f);
     //Have to store the timer after SetTimer call becuase it gets its value set in the SetTimer call
     CurrentOverlappedActors.Add(OverlappedActor->GetName(), TimerHandle);
-     UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapBegin: TimerHandle: ") + TimerHandle.ToString(), true, false, FColor::Blue, 3.0f);
+    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapBegin: TimerHandle: ") + TimerHandle.ToString(), true, false, FColor::Blue, 3.0f);
 }
 
 
@@ -76,26 +75,26 @@ void ARB_AC_PainActor::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, c
   AActor* OverlappedActor = nullptr;
 
   if (OtherActor) {
-     UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapEnd: OtherActor: ") + OtherActor->GetName(), true, false, FColor::Green, 3.0f);
+    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapEnd: OtherActor: ") + OtherActor->GetName(), true, false, FColor::Green, 3.0f);
     OverlappedActor = OtherActor;
   }
   else if (OverlappedComp) {
-     UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapEnd: OverlappedComp:  ") + OverlappedComp->GetName(), true, false, FColor::Green, 3.0f);
+    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapEnd: OverlappedComp:  ") + OverlappedComp->GetName(), true, false, FColor::Green, 3.0f);
     OverlappedActor = OverlappedComp->GetOwner();
   }
   else if (OtherComp) {
-     UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapEnd: OtherComp: ") + OtherComp->GetName(), true, false, FColor::Green, 3.0f);
+    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapEnd: OtherComp: ") + OtherComp->GetName(), true, false, FColor::Green, 3.0f);
     OverlappedActor = OverlappedComp->GetOwner();
   }
   else {
-     UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapEnd: Didnt have anything? "), true, false, FColor::Green, 3.0f);
+    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapEnd: Didnt have anything? "), true, false, FColor::Green, 3.0f);
     return;
   }
 
   if (!OverlappedActor) { return; }
 
   FTimerHandle TimerHandle = CurrentOverlappedActors[OverlappedActor->GetName()];
-   UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapEnd: TimerHandle: ") + TimerHandle.ToString(), true, false, FColor::Blue, 3.0f);
+  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("OnOverlapEnd: TimerHandle: ") + TimerHandle.ToString(), true, false, FColor::Blue, 3.0f);
   GetWorldTimerManager().ClearTimer(TimerHandle);
   CurrentOverlappedActors.Remove(OverlappedActor->GetName());
 
@@ -103,13 +102,11 @@ void ARB_AC_PainActor::OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, c
 
 void ARB_AC_PainActor::ApplyDmg(AActor* OverlappedActor)
 {
-   UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_PainActor: ApplyDmg: "), true, false, FColor::Cyan, 3.0f);
+   //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_PainActor: ApplyDmg: "), true, false, FColor::Cyan, 3.0f);
   // UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ApplyDmg"), true, false, FColor::Red, 5.0f);
   //Server needs to handle damage, otherwise client and server will handle damage
   //Client may want to do something here though, like particle effects
-  if (HasAuthority()){
-    OverlappedActor->TakeDamage(DamageAmount, FDamageEvent(DamageType), nullptr, GetOwner());
-  }
+  OverlappedActor->TakeDamage(DamageAmount, FDamageEvent(DamageType), nullptr, GetOwner());
 }
 
 
