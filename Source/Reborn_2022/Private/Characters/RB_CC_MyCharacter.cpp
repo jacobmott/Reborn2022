@@ -17,6 +17,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Components/CapsuleComponent.h"
 
+
 #include "PhysXPublic.h"
 #include "PhysxUserData.h"
 #include "PhysXPublic.h"
@@ -163,16 +164,16 @@ void ARB_CC_MyCharacter::BeginPlay()
  
     //GetWorldTimerManager().SetTimer(TimerHandle_Health, this, &ARB_CC_MyCharacter::SetPercent, 2.0f, true, 2.0f);
   }
-  MyHealthWidget->SetTwoSided(true);
+  MyHealthWidget->SetTwoSided(false);
   MyHealthWidget->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
-  MyHealthWidget2->SetTwoSided(true);
+  MyHealthWidget2->SetTwoSided(false);
   MyHealthWidget2->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
-  MyHealthWidget3->SetTwoSided(true);
+  MyHealthWidget3->SetTwoSided(false);
   MyHealthWidget3->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
-  MyHealthWidget4->SetTwoSided(true);
+  MyHealthWidget4->SetTwoSided(false);
   MyHealthWidget4->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 }
 
