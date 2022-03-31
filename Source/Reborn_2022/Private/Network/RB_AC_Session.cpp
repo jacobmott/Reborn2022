@@ -25,39 +25,67 @@ ARB_AC_Session::ARB_AC_Session()
 
   SetReplicates(false);
 
-  ForServer = false;
-  ForClient = false;
-  
 
-  SessionListWidget = CreateDefaultSubobject<UWidgetComponent>("SessionListWidget");
+
+
+  SessionActorTypeWidget = CreateDefaultSubobject<UWidgetComponent>("SessionActorTypeWidget");
+  SESSION_ACTOR_TYPE value = SessionActorType.GetValue();
+  if (value == SESSION_ACTOR_TYPE::Client) {
+    SessionListWidget = CreateDefaultSubobject<UWidgetComponent>("SessionListWidget");
+  }
   static ConstructorHelpers::FClassFinder<UUserWidget> SessionListWidgetObj(TEXT("/Game/MyStuff/Blueprints/Widgets/BP_W_FloatingText"));
   if (SessionListWidgetObj.Succeeded()) {
-    SessionListWidget->SetWidgetClass(SessionListWidgetObj.Class);
+    SessionActorTypeWidget->SetWidgetClass(SessionListWidgetObj.Class);
+    if (value == SESSION_ACTOR_TYPE::Client) {
+      SessionListWidget->SetWidgetClass(SessionListWidgetObj.Class);
+    }
   }
   else
   {
     UE_LOG(LogTemp, Warning, TEXT("SessionListWidgetObj widget could not initialize on ARB_AC_Session"));
   }
 
-
-
-
 }
 
 
-void ARB_AC_Session::UpdateFloatingTextHud(FOnlineSessionSearchResult& CurrentSessionSearchResult)
+void ARB_AC_Session::UpdateFloatingTextTypeHud()
+{
+  // MyHealthWidget
+   //UUserWidget* NewWidget = NewObject<UUserWidget>(Outer, UserWidgetClass, InstanceName, RF_Transactional);
+  UUserWidget* T = SessionActorTypeWidget->GetWidget();
+  
+  UTextBlock* TB = Cast<UTextBlock>(T->GetWidgetFromName(FName(TEXT("TextBlock_0"))));
+  FString Value = UEnum::GetValueAsName(SessionActorType.GetValue()).ToString();
+  TB->SetText(FText::FromString(Value));
+}
+
+
+void ARB_AC_Session::UpdateFloatingTextHud()
 {
   // MyHealthWidget
    //UUserWidget* NewWidget = NewObject<UUserWidget>(Outer, UserWidgetClass, InstanceName, RF_Transactional);
   UUserWidget* T = SessionListWidget->GetWidget();
-  UTextBlock* TB = Cast<UTextBlock>(T->GetWidgetFromName(FName(TEXT("Text"))));
-  TB->SetText( FText::FromString(CurrentSessionSearchResult.GetSessionIdStr()) );
+  UTextBlock* TB = Cast<UTextBlock>(T->GetWidgetFromName(FName(TEXT("TextBlock_0"))));
+  TB->SetText( FText::FromString(CurrentSelectedSession.GetSessionIdStr()) );
 }
 
 // Called when the game starts or when spawned
 void ARB_AC_Session::BeginPlay()
 {
 	Super::BeginPlay();
+
+  SessionActorTypeWidget->SetTwoSided(false);
+  SessionActorTypeWidget->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+  UpdateFloatingTextTypeHud();
+
+  /* Activate client searching */
+  SESSION_ACTOR_TYPE value = SessionActorType.GetValue();
+  if (value == SESSION_ACTOR_TYPE::Client){
+    SessionListWidget->SetTwoSided(false);
+    SessionListWidget->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+    UpdateFloatingTextHud();
+    GetWorld()->GetTimerManager().SetTimer(SearchSessionsTimerHandle, this, &ARB_AC_Session::RefreshSessionsList, 6.0f, true);
+  }
 
   UGameInstance* TGameInstance = GetGameInstance();
   RB_SessionSubsystem = TGameInstance->GetSubsystem<URB_SessionSubsystem>();
@@ -70,34 +98,34 @@ void ARB_AC_Session::BeginPlay()
   RB_SessionSubsystem->OnCreateSessionCompleteEvent.AddDynamic(this, &ARB_AC_Session::OnCreateSessionComplete);
   RB_SessionSubsystem->OnFindSessionsCompleteEvent.AddUObject(this, &ARB_AC_Session::OnFindSessionsComplete);
   RB_SessionSubsystem->OnStartSessionCompleteEvent.AddDynamic(this, &ARB_AC_Session::OnStartSessionComplete);
+  RB_SessionSubsystem->OnJoinGameSessionCompleteEvent.AddUObject(this, &ARB_AC_Session::OnJoinGameSessionComplete);
 }
 
 
 void ARB_AC_Session::OnFindSessionsComplete(const TArray<FOnlineSessionSearchResult>& SessionResults, bool Successful)
 {
-
+  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnFindSessionsComplete Top"), true, false, FColor::Red, 10.0f);
   if (!Successful) {
     return;
   }
-  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnFindSessionsComplete"), true, false, FColor::Red, 10.0f);
-
+  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnFindSessionsComplete Succsss"), true, false, FColor::Red, 10.0f);
+  FString NoSessionYet = TEXT("NULLNULLNULL");
+  CurrentSelectedSessionId = NoSessionYet;
   for (auto& SessionResult : SessionResults) {
+
     FString SessionId = SessionResult.Session.GetSessionIdStr();
-    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnFindSessionsComplete: SessionId: ")+ SessionId, true, false, FColor::Red, 10.0f);
-    //bool DoesSessionAlreadyExists = Sessions.Contains(SessionId);
-    //if (!DoesSessionAlreadyExists) {
-    //}
-    //RB_SessionSubsystem->JoinGameSession(SessionResult);
     Sessions.Add(SessionId, SessionResult);
-    //Create Portal actor for this session
+
+    CurrentSelectedSessionId = SessionId;
+  }
+  //if (ElapsedTime >= 6.0f && !CurrentSelectedSessionId.Equals(NoSessionYet)) {
+  if (!CurrentSelectedSessionId.Equals(NoSessionYet) ) {
+    ElapsedTime = 0.0f;
+    CurrentSelectedSession = Sessions[CurrentSelectedSessionId];
+    UpdateFloatingTextHud();
   }
 
-  
-
   //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnFindSessionsComplete: End: ") + FString::FromInt(SessionResults.Num()), true, false, FColor::Red, 10.0f);
-
-  //RB_SessionSubsystem->FindSessions(10, true);
-
 
 }
 
@@ -111,6 +139,17 @@ void ARB_AC_Session::OnCreateSessionComplete(bool Successful)
   }
   UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnCreateSessionComplete, Calling StartSession"), true, false, FColor::Black, 10.0f);
   RB_SessionSubsystem->StartSession();
+}
+
+void ARB_AC_Session::RefreshSessionsList()
+{
+  RB_SessionSubsystem->FindSessions(10, false);
+  //ElapsedTime += 2.0f;
+}
+
+void ARB_AC_Session::OnJoinGameSessionComplete(EOnJoinSessionCompleteResult::Type Result)
+{
+  RB_SessionSubsystem->TryTravelToSession(CurrentSelectedSession);
 }
 
 void ARB_AC_Session::OnStartSessionComplete(bool Successful)
@@ -143,19 +182,18 @@ void ARB_AC_Session::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, c
 
   APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 
-  if (ForServer && (PC == MyCharacterController)) {
-
-    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnOverlapBegin, HasAuthority: Creating Session!!!!!!!!!!!!!!!!"), true, false, FColor::Green, 20.0f);
+  //if (ForServer && (PC == MyCharacterController)) {
+  if (SessionActorType.GetValue() == SESSION_ACTOR_TYPE::Host) {
+    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnOverlapBegin, Host/Server Session created"), true, false, FColor::Green, 20.0f);
     RB_SessionSubsystem->CreateSession(5, false);
   }
-  else if (ForClient && PC->IsLocalPlayerController() && (PC == MyCharacterController)) {
-
-    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnOverlapBegin, Not HasAuthority: FindSessions Session"), true, false, FColor::Green, 10.0f);
-    //RB_SessionSubsystem->FindSessions(10, false);
-    //Need to write code to connect to current session select 
+  //else if (ForClient && PC->IsLocalPlayerController() && (PC == MyCharacterController)) {
+  if (SessionActorType.GetValue() == SESSION_ACTOR_TYPE::Client) {
+    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnOverlapBegin, Client"), true, false, FColor::Green, 10.0f);
+    RB_SessionSubsystem->JoinGameSession(CurrentSelectedSession);
   }
 
-  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnOverlapBegin, Got SessionSubsystem"), true, false, FColor::Red, 10.0f);
+  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnOverlapBegin, Got SessionSubsystem"), true, false, FColor::Red, 10.0f);
   //CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionCompleted)
   //RB_SessionSubsystem->OnCreateSessionCompleteEvent.AddDynamic(this, &ARB_AC_Session::OnCreateSessionComplete);
 

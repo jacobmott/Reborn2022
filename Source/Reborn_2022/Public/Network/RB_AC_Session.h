@@ -5,11 +5,20 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "OnlineSessionSettings.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "RB_AC_Session.generated.h"
 
 class UStaticMeshComponent;
 class URB_SessionSubsystem;
 class UWidgetComponent;
+
+
+UENUM()
+enum SESSION_ACTOR_TYPE
+{
+  Client     UMETA(DisplayName = "Client"),
+  Host       UMETA(DisplayName = "Host"),
+};
 
 UCLASS()
 class REBORN_2022_API ARB_AC_Session : public AActor
@@ -23,23 +32,24 @@ public:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
   UStaticMeshComponent* StaticMeshComp;
 
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ServerConnect")
-	bool ForServer;
-
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ServerConnect")
-  bool ForClient;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Type)
+  TEnumAsByte<SESSION_ACTOR_TYPE> SessionActorType;
 
 
   UFUNCTION()
   void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
     const FHitResult& SweepResult);
 
-  UPROPERTY(EditAnywhere, Category = "Portal")
-  TSubclassOf<AActor> PortalActorToSpawn;
+  //UPROPERTY(EditAnywhere, Category = "Portal")
+  //TSubclassOf<AActor> PortalActorToSpawn;
 
   //Floating widget
-  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "SessionList")
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "CurrentSession")
   UWidgetComponent* SessionListWidget;
+
+  //Floating widget
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "SessionActorType")
+  UWidgetComponent* SessionActorTypeWidget;
 
 protected:
 	// Called when the game starts or when spawned
@@ -51,12 +61,22 @@ public:
 
 private:
 	URB_SessionSubsystem* RB_SessionSubsystem;
+
+
+  /* Handle to manage the timer */
+  FTimerHandle SearchSessionsTimerHandle;
  
   UFUNCTION()
 	void OnCreateSessionComplete(bool Successful);
 
+  UFUNCTION()
+  void RefreshSessionsList();
 
-  void UpdateFloatingTextHud(FOnlineSessionSearchResult& CurrentSessionSearchResult)''
+  void OnJoinGameSessionComplete(EOnJoinSessionCompleteResult::Type Result);
+
+
+  void UpdateFloatingTextHud();
+  void UpdateFloatingTextTypeHud();
 
   UFUNCTION()
   void OnStartSessionComplete(bool Successful);
@@ -64,11 +84,10 @@ private:
 	void OnFindSessionsComplete(const TArray<FOnlineSessionSearchResult>& SessionResults, bool Successful);
 
 	TMap<FString, FOnlineSessionSearchResult> Sessions;
+  FOnlineSessionSearchResult CurrentSelectedSession;
+  FString CurrentSelectedSessionId = FString(TEXT("NULLNULLNULL"));
 
-  FString CurrentSessionSearchResult;
-
-
-
+  float ElapsedTime = 0.0f;
 
 
 };
