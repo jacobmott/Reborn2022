@@ -40,16 +40,18 @@ void URB_SessionSubsystem::CreateSession(int32 NumPublicConnections, bool IsLANM
   LastSessionSettings->Set(SETTING_MAPNAME, FString("Reborn_2022"), EOnlineDataAdvertisementType::ViaOnlineService);
 
   CreateSessionCompleteDelegateHandle = sessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
-  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:CreateSession, right before local player create session call"), true, false, FColor::Orange, 10.0f);
+  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:CreateSession, right before local player create session call"), true, false, FColor::Orange, 10.0f);
   const ULocalPlayer* localPlayer = GetWorld()->GetFirstLocalPlayerFromController();
   if (!sessionInterface->CreateSession(*localPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings))
   {
-    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:CreateSession, FAILED!!!!!!!!!!!!!!!"), true, false, FColor::Orange, 10.0f);
+    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:CreateSession, FAILED!!!!!!!!!!!!!!!"), true, false, FColor::Orange, 10.0f);
     sessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
 
     OnCreateSessionCompleteEvent.Broadcast(false);
   }
-  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:CreateSession, End, Done"), true, false, FColor::Orange, 10.0f);
+
+  int32 hwwer = 32;
+  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:CreateSession, End, Done"), true, false, FColor::Orange, 10.0f);
 }
 
 void URB_SessionSubsystem::OnCreateSessionCompleted(FName SessionName, bool Successful)
@@ -59,7 +61,8 @@ void URB_SessionSubsystem::OnCreateSessionCompleted(FName SessionName, bool Succ
   {
     sessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
   }
-  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:OnCreateSessionCompleted, Broadcast to OnCreateSessionCompleteEvent WE HAD A SUCCESS!"), true, false, FColor::Orange, 10.0f);
+  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("SESSION CREATED")+ SessionName.ToString(), true, false, FColor::Orange, 10.0f);
+
   OnCreateSessionCompleteEvent.Broadcast(Successful);
 }
 
@@ -115,13 +118,14 @@ void URB_SessionSubsystem::StartSession()
 
   if (!sessionInterface->StartSession(NAME_GameSession))
   {
+    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("START SESSION FAILED?"), true, false, FColor::Yellow, 30.0f);
     sessionInterface->ClearOnStartSessionCompleteDelegate_Handle(StartSessionCompleteDelegateHandle);
 
     OnStartSessionCompleteEvent.Broadcast(false);
   } 
 
   //TryTravelToCurrentSession();
-
+  float thiskkll = 1.0f;
 }
 
 void URB_SessionSubsystem::OnStartSessionCompleted(FName SessionName, bool Successful)
@@ -132,20 +136,15 @@ void URB_SessionSubsystem::OnStartSessionCompleted(FName SessionName, bool Succe
     sessionInterface->ClearOnStartSessionCompleteDelegate_Handle(StartSessionCompleteDelegateHandle);
   }
 
-
   OnStartSessionCompleteEvent.Broadcast(Successful);
 
-
-
-  
+ 
   //FString connectString;
   //if (sessionInterface->GetResolvedConnectString(NAME_GameSession, connectString))
   //{
     //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:OnStartSessionCompleted, GetWorld()->ServerTravel calling"), true, false, FColor::Yellow, 30.0f);
 
   //}
- 
-
 
 
 }
@@ -227,7 +226,7 @@ void URB_SessionSubsystem::FindSessions(int32 MaxSearchResults, bool IsLANQuery)
   LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
   LastSessionSearch->MaxSearchResults = MaxSearchResults;
   LastSessionSearch->bIsLanQuery = IsLANQuery;
-  //LastSessionSearch->PingBucketSize = 4;
+  LastSessionSearch->PingBucketSize = 4;
   LastSessionSearch->TimeoutInSeconds = 20;
   LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 
@@ -235,9 +234,10 @@ void URB_SessionSubsystem::FindSessions(int32 MaxSearchResults, bool IsLANQuery)
   if (!sessionInterface->FindSessions(*localPlayer->GetPreferredUniqueNetId(), LastSessionSearch.ToSharedRef()))
   {
     sessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
-
+    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("No sessions22!"), true, false, FColor::Orange, 10.0f);
     OnFindSessionsCompleteEvent.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
   }
+  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Got sessions23!"), true, false, FColor::Orange, 10.0f);
 }
 
 void URB_SessionSubsystem::OnFindSessionsCompleted(bool Successful)
@@ -250,10 +250,11 @@ void URB_SessionSubsystem::OnFindSessionsCompleted(bool Successful)
 
   if (LastSessionSearch->SearchResults.Num() <= 0)
   {
+    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("sucess but 0 sessions!"), true, false, FColor::Orange, 10.0f);
     OnFindSessionsCompleteEvent.Broadcast(TArray<FOnlineSessionSearchResult>(), Successful);
     return;
   }
-
+  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Success and had: ")+ FString::FromInt(LastSessionSearch->SearchResults.Num()), true, false, FColor::Orange, 10.0f);
   OnFindSessionsCompleteEvent.Broadcast(LastSessionSearch->SearchResults, Successful);
 }
 

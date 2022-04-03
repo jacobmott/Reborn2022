@@ -11,13 +11,14 @@
 class UStaticMeshComponent;
 class URB_SessionSubsystem;
 class UWidgetComponent;
+class UCapsuleComponent;
 
 
 UENUM()
 enum SESSION_ACTOR_TYPE
 {
-  Client     UMETA(DisplayName = "Client"),
   Host       UMETA(DisplayName = "Host"),
+  Client     UMETA(DisplayName = "Client"),
 };
 
 UCLASS()
@@ -35,6 +36,9 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Type)
   TEnumAsByte<SESSION_ACTOR_TYPE> SessionActorType;
 
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collisions")
+  UCapsuleComponent* CapsuleComponent;
+  
 
   UFUNCTION()
   void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
@@ -44,11 +48,11 @@ public:
   //TSubclassOf<AActor> PortalActorToSpawn;
 
   //Floating widget
-  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "CurrentSession")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CurrentSession")
   UWidgetComponent* SessionListWidget;
 
   //Floating widget
-  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "SessionActorType")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SessionActorType")
   UWidgetComponent* SessionActorTypeWidget;
 
 protected:
@@ -65,12 +69,16 @@ private:
 
   /* Handle to manage the timer */
   FTimerHandle SearchSessionsTimerHandle;
- 
+  FTimerHandle UpdateCurrentSessionTimerHandle;
+
   UFUNCTION()
 	void OnCreateSessionComplete(bool Successful);
 
   UFUNCTION()
   void RefreshSessionsList();
+
+  UFUNCTION()
+  void RefreshAndRotateCurrentSession();
 
   void OnJoinGameSessionComplete(EOnJoinSessionCompleteResult::Type Result);
 
@@ -83,11 +91,16 @@ private:
 
 	void OnFindSessionsComplete(const TArray<FOnlineSessionSearchResult>& SessionResults, bool Successful);
 
-	TMap<FString, FOnlineSessionSearchResult> Sessions;
+	TMap<FString, bool> SessionsMap;
+  TArray<FOnlineSessionSearchResult> SessionsArray;
   FOnlineSessionSearchResult CurrentSelectedSession;
   FString CurrentSelectedSessionId = FString(TEXT("NULLNULLNULL"));
+  int32 CurrentSessionIndex = 0;
 
-  float ElapsedTime = 0.0f;
+  bool Initial = true;
+
+
+  FString NoSessionYet = TEXT("NULLNULLNULL");
 
 
 };
