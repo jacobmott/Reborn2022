@@ -13,14 +13,6 @@ class URB_SessionSubsystem;
 class UWidgetComponent;
 class UCapsuleComponent;
 
-
-UENUM()
-enum SESSION_ACTOR_TYPE
-{
-  Host       UMETA(DisplayName = "Host"),
-  Client     UMETA(DisplayName = "Client"),
-};
-
 UCLASS()
 class REBORN_2022_API ARB_AC_Session : public AActor
 {
@@ -33,40 +25,27 @@ public:
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
   UStaticMeshComponent* StaticMeshComp;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Type)
-  TEnumAsByte<SESSION_ACTOR_TYPE> SessionActorType;
-
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collisions")
   UCapsuleComponent* CapsuleComponent;
   
 
-  UFUNCTION()
-  void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
-    const FHitResult& SweepResult);
-
-  //UPROPERTY(EditAnywhere, Category = "Portal")
-  //TSubclassOf<AActor> PortalActorToSpawn;
-
   //Floating widget
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CurrentSession")
-  UWidgetComponent* SessionListWidget;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TextHud")
+  UWidgetComponent* TextHudWidget;
 
-  //Floating widget
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SessionActorType")
-  UWidgetComponent* SessionActorTypeWidget;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+  URB_SessionSubsystem* RB_SessionSubsystem;
+
 public:	
 	// Called every frame
 	//virtual void Tick(float DeltaTime) override;
 
-private:
-	URB_SessionSubsystem* RB_SessionSubsystem;
 
-
+protected:
   /* Handle to manage the timer */
   FTimerHandle SearchSessionsTimerHandle;
   FTimerHandle UpdateCurrentSessionTimerHandle;
@@ -82,9 +61,8 @@ private:
 
   void OnJoinGameSessionComplete(EOnJoinSessionCompleteResult::Type Result);
 
-
-  void UpdateFloatingTextHud();
-  void UpdateFloatingTextTypeHud();
+  virtual void UpdateFloatingImageHud();
+  virtual void UpdateFloatingTextHud();
 
   UFUNCTION()
   void OnStartSessionComplete(bool Successful);
@@ -101,6 +79,8 @@ private:
 
 
   FString NoSessionYet = TEXT("NULLNULLNULL");
+
+private:
 
 
 };

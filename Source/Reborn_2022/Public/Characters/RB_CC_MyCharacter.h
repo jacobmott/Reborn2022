@@ -35,6 +35,8 @@ class REBORN_2022_API ARB_CC_MyCharacter : public ACharacter
 public:
   // Sets default values for this character's properties
   ARB_CC_MyCharacter();
+  
+  //Test
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
   USpringArmComponent* SpringArmComp;
