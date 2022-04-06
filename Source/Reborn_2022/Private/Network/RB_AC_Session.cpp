@@ -58,13 +58,11 @@ void ARB_AC_Session::BeginPlay()
   UGameInstance* TGameInstance = GetGameInstance();
   RB_SessionSubsystem = TGameInstance->GetSubsystem<URB_SessionSubsystem>();
   if (!RB_SessionSubsystem) {
-    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnOverlapBegin. Could not find SessionSubsystem"), true, false, FColor::Red, 10.0f);
     return;
   }
 
   CurrentSelectedSessionId = NoSessionYet;
   TextHudWidget->SetTwoSided(false);
-  UpdateFloatingTextHud();
 
 }
 
@@ -86,7 +84,6 @@ void ARB_AC_Session::OnCreateSessionComplete(bool Successful)
 {
 
   if (!Successful) {
-    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("ARB_AC_Session:OnCreateSessionComplete, Not successful"), true, false, FColor::Red, 10.0f);
     return;
   }
 
@@ -96,14 +93,12 @@ void ARB_AC_Session::OnCreateSessionComplete(bool Successful)
 void ARB_AC_Session::RefreshSessionsList()
 {
 
-  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("RefreshSessionsList"), true, false, FColor::Black, 10.0f);
   RB_SessionSubsystem->FindSessions(10, false);
 
 }
 
 void ARB_AC_Session::RefreshAndRotateCurrentSession()
 {
-
 
   if (SessionsArray.Num() <= 0) {
     return;
@@ -133,16 +128,6 @@ void ARB_AC_Session::OnJoinGameSessionComplete(EOnJoinSessionCompleteResult::Typ
 void ARB_AC_Session::UpdateFloatingImageHud()
 {
   
-}
-
-void ARB_AC_Session::OnStartSessionComplete(bool Successful)
-{
-
-  if (!Successful) {
-    return;
-  }
-  if (GetWorld()->ServerTravel("Reborn_2022?listen", true, false)) {
-  }
 }
 
 

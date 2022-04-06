@@ -28,6 +28,7 @@ void ARB_AC_SessionClient::BeginPlay()
   GetWorld()->GetTimerManager().SetTimer(SearchSessionsTimerHandle, this, &ARB_AC_SessionClient::RefreshSessionsList, 2.0f, false, 0.0f);
   GetWorld()->GetTimerManager().SetTimer(UpdateCurrentSessionTimerHandle, this, &ARB_AC_SessionClient::RefreshAndRotateCurrentSession, 4.0f, true, 4.0f);
 
+  UpdateFloatingTextHud();
 }
 
 

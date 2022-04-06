@@ -50,6 +50,9 @@ protected:
   FTimerHandle SearchSessionsTimerHandle;
   FTimerHandle UpdateCurrentSessionTimerHandle;
 
+
+  FTimerHandle RotateMapSelectionTimerHandle;
+
   UFUNCTION()
 	void OnCreateSessionComplete(bool Successful);
 
@@ -64,8 +67,6 @@ protected:
   virtual void UpdateFloatingImageHud();
   virtual void UpdateFloatingTextHud();
 
-  UFUNCTION()
-  void OnStartSessionComplete(bool Successful);
 
 	void OnFindSessionsComplete(const TArray<FOnlineSessionSearchResult>& SessionResults, bool Successful);
 

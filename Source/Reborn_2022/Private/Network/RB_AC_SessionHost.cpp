@@ -10,6 +10,8 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/StaticMeshComponent.h"
 
+#include "Misc/Paths.h"
+
 // Sets default values
 ARB_AC_SessionHost::ARB_AC_SessionHost()
 {
@@ -25,6 +27,11 @@ void ARB_AC_SessionHost::BeginPlay()
 
   RB_SessionSubsystem->OnCreateSessionCompleteEvent.AddDynamic(this, &ARB_AC_SessionHost::OnCreateSessionComplete);
   RB_SessionSubsystem->OnStartSessionCompleteEvent.AddDynamic(this, &ARB_AC_SessionHost::OnStartSessionComplete);
+  CurrentMap = Maps[0];
+
+  GetWorld()->GetTimerManager().SetTimer(RotateMapSelectionTimerHandle, this, &ARB_AC_SessionHost::RotateMapSelection, 4.0f, true, 0.0f);
+
+  UpdateFloatingTextHud();
 
 }
 
@@ -33,25 +40,55 @@ void ARB_AC_SessionHost::UpdateFloatingTextHud()
 
   Super::UpdateFloatingTextHud();
 
-  FString Content = TEXT("HOST:\n");
   UUserWidget* T = TextHudWidget->GetWidget();
-  UTextBlock* TB = Cast<UTextBlock>(T->GetWidgetFromName(FName(TEXT("TextBlock_0"))));
-  TB->SetText(FText::FromString(Content));
-
 
   UImage* IM = Cast<UImage>(T->GetWidgetFromName(FName(TEXT("Image_70"))));
-  //IM->SourceFileTagName
+  //FString ImagePath = FPaths::ProjectContentDir() + "MyStuff/Maps/Thumbnails/" + CurrentMap;
+  //UTexture2D* Texture = Cast<UTexture2D>(StaticLoadObject(UTexture2D::StaticClass(), NULL, *(ImagePath)));
+  IM->SetBrushFromTexture(CurrentMap.Texture);
 
+  FString Content = TEXT("HOST:\n");
+  UTextBlock* TB = Cast<UTextBlock>(T->GetWidgetFromName(FName(TEXT("TextBlock_0"))));
+  Content += CurrentMap.MapName;
+  TB->SetText(FText::FromString(Content));
+
+}
+
+
+void ARB_AC_SessionHost::RotateMapSelection()
+{
+
+  if (Maps.Num() <= 0) {
+    return;
+  }
+
+  CurrentMapIndex += 1;
+  if (CurrentMapIndex >= Maps.Num()) {
+    CurrentMapIndex = 0;
+  }
+  CurrentMap = Maps[CurrentMapIndex];
+
+  UpdateFloatingTextHud();
+}
+
+
+void ARB_AC_SessionHost::OnStartSessionComplete(bool Successful)
+{
+
+  if (!Successful) {
+    return;
+  }
+  if (GetWorld()->ServerTravel(CurrentMap.MapName+"?listen", true, false)) {
+  }
 }
 
 
 void ARB_AC_SessionHost::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
-  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Host/Server Overlap"), true, false, FColor::Green, 20.0f);
   if (!OtherActor) {
     return;
   }
 
-  RB_SessionSubsystem->CreateSession(5, false);
+  RB_SessionSubsystem->CreateSession(5, false, CurrentMap.MapName);
 }

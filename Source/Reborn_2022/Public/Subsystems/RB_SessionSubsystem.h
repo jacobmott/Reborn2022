@@ -26,7 +26,7 @@ class REBORN_2022_API URB_SessionSubsystem : public UGameInstanceSubsystem
 public:
   URB_SessionSubsystem();
 
-  void CreateSession(int32 NumPublicConnections, bool IsLANMatch);
+  void CreateSession(int32 NumPublicConnections, bool IsLANMatch, FString MapName);
   void UpdateSession();
   void StartSession();
   void EndSession();

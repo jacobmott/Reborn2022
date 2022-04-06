@@ -6,6 +6,25 @@
 #include "Network/RB_AC_Session.h"
 #include "RB_AC_SessionHost.generated.h"
 
+class UTexture2D;
+
+
+USTRUCT(BlueprintType)
+struct FMapInfo
+{
+  GENERATED_BODY();
+
+public:
+  /* Display name for Map */
+  UPROPERTY(EditAnywhere, BlueprintReadOnly)
+  FString MapName;
+
+  UPROPERTY(EditAnywhere, BlueprintReadOnly)
+  UTexture2D* Texture;
+  
+};
+
+
 /**
  * 
  */
@@ -24,11 +43,26 @@ public:
     const FHitResult& SweepResult);
 
 
+  UPROPERTY(EditAnywhere, meta = (TitleProperty = "MapName"))
+  TArray<FMapInfo> Maps;
+
+
 protected:
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;
 
   virtual void UpdateFloatingTextHud() override;
 
+
+  UFUNCTION()
+  void OnStartSessionComplete(bool Successful);
+
+  UFUNCTION()
+  void RotateMapSelection();
+
+
+private:
+  FMapInfo CurrentMap;
+  int32 CurrentMapIndex = 0;
 	
 };
