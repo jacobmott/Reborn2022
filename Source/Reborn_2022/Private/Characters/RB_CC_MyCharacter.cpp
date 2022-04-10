@@ -68,7 +68,7 @@ ARB_CC_MyCharacter::ARB_CC_MyCharacter()
   ImpactRadius = 200.0f;
   RadialImpactForce = 2000.0f;
   //NOTE: WOW! this was causing the original issue i was seeing
-  UseActorsCenterOfMassInCollisionCalculation = false;
+  UseActorsCenterOfMassInCollisionCalculation = true;
 
   StartScale = FVector(1, 1, 1);
   TargetScale = FVector(1.3f, 1.3f, 0.8f);
@@ -317,9 +317,11 @@ void ARB_CC_MyCharacter::FireForward_Implementation(){
     bool DidSweepHit = GetWorld()->SweepMultiByChannel(HitResultsFromRadialForce, HitResult.Location, HitResult.Location + FVector(0.0f, 0.0f, 0.001f),
       FQuat::Identity, ECC_WorldStatic, SphereCollision);
     
-    AddClientDrawDebugSphere(GetWorld(), HitResult.Location, ImpactRadius, 35, FColor::Orange, false, 3.0f);
+    //AddClientDrawDebugSphere(GetWorld(), HitResult.Location, ImpactRadius, 35, FColor::Orange, false, 3.0f);
+    DrawDebugSphere(GetWorld(), HitResult.Location, ImpactRadius, 35, FColor::Orange, false, 3.0f);
     int results = HitResultsFromRadialForce.Num();
     FString IntAsString = FString::FromInt(results);
+    UKismetSystemLibrary::PrintString(GetWorld(), IntAsString, true, false, FColor::Orange, 3.0f);
     SpawnExplosion(HitResult.Location, FVector(ImpactRadius, ImpactRadius, ImpactRadius));
     
     //if (DidSweepHit){
@@ -331,36 +333,22 @@ void ARB_CC_MyCharacter::FireForward_Implementation(){
         //Do we have a static mesh for what we hit? otherwise return
         UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Hit.GetActor()->GetRootComponent());
         if (MeshComp) {
-          if (DebugMyCharacter == DEBUG_FIREFORWARD || DebugMyCharacter == DEBUG_ALL) {
-            ////https://forums.unrealengine.com/t/how-to-find-center-of-mass/285687
-            ////https://cpp.hotexamples.com/examples/-/PxRigidBody/addForce/cpp-pxrigidbody-addforce-method-examples.html
-          }
+          //https://forums.unrealengine.com/t/how-to-find-center-of-mass/285687
+          //https://cpp.hotexamples.com/examples/-/PxRigidBody/addForce/cpp-pxrigidbody-addforce-method-examples.html
 
-          //float ActorCOMZPosDiffFromHitOriginZPos = FMath::Abs(MeshComp->GetBodyInstance()->GetCOMPosition().Z - HitResult.Location.Z);
+          DrawDebugSphere(GetWorld(), HitResult.Location, 20.0f, 35, FColor::Red, false, 3.0f);
+          DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(ImpactRadius, 0.0f, 0.0f)), FColor::Red, false, 3.0f, 0, 10.0f);
+          DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(0.0f, ImpactRadius, 0.0f)), FColor::Red, false, 3.0f, 0, 10.0f);
+          DrawDebugLine(GetWorld(), HitResult.Location, HitResult.Location + (FVector(0.0f, 0.0f, ImpactRadius)), FColor::Red, false, 3.0f, 0, 10.0f);
+          UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Had mesh"), true, false, FColor::Orange, 3.0f);
+          DrawDebugSphere(GetWorld(), MeshComp->GetBodyInstance()->GetCOMPosition(), 10.0f, 32, FColor::Orange, false, 3.0f);
+
           FVector HitOriginLocation = HitResult.Location;
           FVector diff = MeshComp->GetBodyInstance()->GetCOMPosition() - HitOriginLocation;
           float RealDistanceFromHitOriginToActorCOM = ImpactRadius;
           if (UseActorsCenterOfMassInCollisionCalculation) {
             RealDistanceFromHitOriginToActorCOM = diff.Size();
           }
-          //FPhysicsActorHandle PAH = MeshComp->GetBodyInstance()->GetPhysicsActorHandle();
-          //PxRigidBody* Actor = FPhysicsInterface::GetPxRigidBody_AssumesLocked(PAH);
-          //if (!Actor) {
-          //  continue;
-          //}
-          //PxTransform PCOMTransform = Actor->getGlobalPose().transform(Actor->getCMassLocalPose());
-          //PxVec3 PCOMPos = PCOMTransform.p; // center of mass in world space
-          //PxVec3 POrigin = U2PVector(HitResult.Location); // origin of radial impulse, in world space
-          //PxVec3 PDelta = PCOMPos - POrigin; // vector from origin to COM
-          //
-          //float Mag = PDelta.magnitude(); // Distance from COM to origin, in Unreal scale : @todo: do we still need conversion scale?
-          //FString IntAsString33 = FString::FromInt(Mag);
-          ////UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Mag is: ") + IntAsString33, true, false, FColor::Orange, 3.0f);
-          //// If COM is outside radius, do nothing.
-          //if (Mag > ImpactRadius)
-          //{
-          //  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("WTF!"), true, false, FColor::Orange, 3.0f);
-          //}
 
           MeshComp->AddRadialImpulse(HitResult.Location, RealDistanceFromHitOriginToActorCOM, RadialImpactForce, ERadialImpulseFalloff::RIF_Constant, true);
         }
