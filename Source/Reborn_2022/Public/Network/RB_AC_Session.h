@@ -13,6 +13,28 @@ class URB_SessionSubsystem;
 class UWidgetComponent;
 class UCapsuleComponent;
 
+
+class UTexture2D;
+
+
+USTRUCT(BlueprintType)
+struct FMapInfo
+{
+  GENERATED_BODY();
+
+public:
+  /* Display name for Map */
+  UPROPERTY(EditAnywhere, BlueprintReadOnly)
+  FString MapName;
+
+  UPROPERTY(EditAnywhere, BlueprintReadOnly)
+  UTexture2D* Texture;
+
+  FName SessionName;
+
+};
+
+
 UCLASS()
 class REBORN_2022_API ARB_AC_Session : public AActor
 {
@@ -57,6 +79,12 @@ protected:
 	void OnCreateSessionComplete(bool Successful);
 
   UFUNCTION()
+  void OnEndSessionComplete(bool Successful);
+
+  UFUNCTION()
+  void OnDestroySessionComplete(bool Successful);
+
+  UFUNCTION()
   void RefreshSessionsList();
 
   UFUNCTION()
@@ -74,12 +102,20 @@ protected:
   TArray<FOnlineSessionSearchResult> SessionsArray;
   FOnlineSessionSearchResult CurrentSelectedSession;
   FString CurrentSelectedSessionId = FString(TEXT("NULLNULLNULL"));
-  int32 CurrentSessionIndex = 0;
+  int32 CurrentSessionIndex = -1;
 
   bool Initial = true;
 
+  FMapInfo CurrentMap;
+  int32 CurrentMapIndex = 0;
 
   FString NoSessionYet = TEXT("NULLNULLNULL");
+
+  FName CurrentSessionName;
+  FString CurrentMapName;
+  FOnlineSessionSearchResult CurrentOnlineSessionSearchResult;
+
+  AActor* CurrentActorForEndSession;
 
 private:
 

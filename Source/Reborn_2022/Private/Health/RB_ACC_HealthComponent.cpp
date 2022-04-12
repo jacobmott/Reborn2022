@@ -17,8 +17,7 @@ URB_ACC_HealthComponent::URB_ACC_HealthComponent()
 
   DefaultHealth = 100;
   Health = DefaultHealth;
-  SetIsReplicated(true);
-
+  SetIsReplicatedByDefault(true);
   // ...
 }
 
@@ -33,7 +32,7 @@ void URB_ACC_HealthComponent::BeginPlay()
     Owner->OnTakeAnyDamage.AddDynamic(this, &URB_ACC_HealthComponent::HandleTakeAnyDamage);
   }
 
-  SetIsReplicated(true);
+  //SetIsReplicated(true);
   
 }
 

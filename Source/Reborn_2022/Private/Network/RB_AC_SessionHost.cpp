@@ -11,6 +11,7 @@
 #include "Components/StaticMeshComponent.h"
 
 #include "Misc/Paths.h"
+#include "Misc/Guid.h"
 
 // Sets default values
 ARB_AC_SessionHost::ARB_AC_SessionHost()
@@ -42,10 +43,16 @@ void ARB_AC_SessionHost::UpdateFloatingTextHud()
 
   UUserWidget* T = TextHudWidget->GetWidget();
 
+  FString MapName = CurrentMap.MapName;
+  UTexture2D* Texture = CurrentMap.Texture;
+  if (MapName.Len() <= 0) {
+    MapName = TEXT("NoSession");
+    FString ImagePath = "/Game/MyStuff/Maps/Thumbnails/" + MapName;
+    Texture = Cast<UTexture2D>(StaticLoadObject(UTexture2D::StaticClass(), NULL, *ImagePath));
+  }
+
   UImage* IM = Cast<UImage>(T->GetWidgetFromName(FName(TEXT("Image_70"))));
-  //FString ImagePath = FPaths::ProjectContentDir() + "MyStuff/Maps/Thumbnails/" + CurrentMap;
-  //UTexture2D* Texture = Cast<UTexture2D>(StaticLoadObject(UTexture2D::StaticClass(), NULL, *(ImagePath)));
-  IM->SetBrushFromTexture(CurrentMap.Texture);
+  IM->SetBrushFromTexture(Texture);
 
   FString Content = TEXT("HOST:\n");
   UTextBlock* TB = Cast<UTextBlock>(T->GetWidgetFromName(FName(TEXT("TextBlock_0"))));
@@ -90,5 +97,19 @@ void ARB_AC_SessionHost::OnOverlapBegin(class UPrimitiveComponent* OverlappedCom
     return;
   }
 
-  RB_SessionSubsystem->CreateSession(5, false, CurrentMap.MapName);
+  if (CurrentMap.MapName.Len() <= 0) {
+    return;
+  }
+
+  FGuid Guid = FGuid::NewGuid();
+
+  //FName SessionName = FName(Guid.ToString());
+  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("HostOverlap: CreateSession: ") + Guid.ToString(), true, false, FColor::Blue, 20.0f);
+  //FString SessName = *CurrentMap.MapName;
+  //SessName += *Guid.ToString();
+
+  CurrentSessionName = FName(*Guid.ToString());
+
+  RB_SessionSubsystem->CreateSession(5, false, CurrentMap.MapName, Guid.ToString());
+
 }

@@ -6,23 +6,7 @@
 #include "Network/RB_AC_Session.h"
 #include "RB_AC_SessionHost.generated.h"
 
-class UTexture2D;
 
-
-USTRUCT(BlueprintType)
-struct FMapInfo
-{
-  GENERATED_BODY();
-
-public:
-  /* Display name for Map */
-  UPROPERTY(EditAnywhere, BlueprintReadOnly)
-  FString MapName;
-
-  UPROPERTY(EditAnywhere, BlueprintReadOnly)
-  UTexture2D* Texture;
-  
-};
 
 
 /**
@@ -61,8 +45,6 @@ protected:
   void RotateMapSelection();
 
 
-private:
-  FMapInfo CurrentMap;
-  int32 CurrentMapIndex = 0;
+
 	
 };
