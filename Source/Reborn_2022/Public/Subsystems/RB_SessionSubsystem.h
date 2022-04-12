@@ -4,6 +4,7 @@
 #include "CoreMinimal.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "OnlineSessionSettings.h"
 #include "RB_SessionSubsystem.generated.h"
 
 
@@ -14,6 +15,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCSOnEndSessionComplete, bool, Succe
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCSOnDestroySessionComplete, bool, Successful);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FCSOnFindSessionsComplete, const TArray<FOnlineSessionSearchResult>& SessionResults, bool Successful);
 DECLARE_MULTICAST_DELEGATE_OneParam(FCSOnJoinSessionComplete, EOnJoinSessionCompleteResult::Type Result);
+
 
 /**
  * 
@@ -26,14 +28,17 @@ class REBORN_2022_API URB_SessionSubsystem : public UGameInstanceSubsystem
 public:
   URB_SessionSubsystem();
 
-  void CreateSession(int32 NumPublicConnections, bool IsLANMatch);
+  void CreateSession(int32 NumPublicConnections, bool IsLANMatch, FString MapName, FString SessionName);
   void UpdateSession();
-  void StartSession();
-  void EndSession();
-  void DestroySession();
+  void StartSession(FName SessionName);
+  void EndSession(FName SessionName);
+  void DestroySession(FName SessionName);
   void FindSessions(int32 MaxSearchResults, bool IsLANQuery);
-  void JoinGameSession(const FOnlineSessionSearchResult& SessionResult);
+  void JoinGameSession(FString MapName, FName SessionName, const FOnlineSessionSearchResult& SessionResult);
   bool TryTravelToSession(const FOnlineSessionSearchResult& SessionResult);
+  FName GetCurrentSession();
+  FString GetCurrentMap();
+  FOnlineSessionSearchResult GetCurrentOnlineSessionSearchResult();
 
   FCSOnCreateSessionComplete OnCreateSessionCompleteEvent;
   FCSOnUpdateSessionComplete OnUpdateSessionCompleteEvent;
@@ -52,6 +57,10 @@ protected:
   void OnFindSessionsCompleted(bool Successful);
   void OnJoinSessionCompleted(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
   bool TryTravelToCurrentSession();
+  bool TryTravelToLocalMap(FString MapName);
+  FName CurrentSessionName;
+  FString CurrentMapName;
+  FOnlineSessionSearchResult CurrentOnlineSessionSearchResult;
 
 private:
   FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;

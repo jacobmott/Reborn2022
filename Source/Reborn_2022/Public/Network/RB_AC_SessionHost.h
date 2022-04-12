@@ -6,6 +6,9 @@
 #include "Network/RB_AC_Session.h"
 #include "RB_AC_SessionHost.generated.h"
 
+
+
+
 /**
  * 
  */
@@ -24,11 +27,24 @@ public:
     const FHitResult& SweepResult);
 
 
+  UPROPERTY(EditAnywhere, meta = (TitleProperty = "MapName"))
+  TArray<FMapInfo> Maps;
+
+
 protected:
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;
 
   virtual void UpdateFloatingTextHud() override;
+
+
+  UFUNCTION()
+  void OnStartSessionComplete(bool Successful);
+
+  UFUNCTION()
+  void RotateMapSelection();
+
+
 
 	
 };

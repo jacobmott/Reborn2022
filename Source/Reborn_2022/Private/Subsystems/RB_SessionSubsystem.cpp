@@ -14,17 +14,15 @@ URB_SessionSubsystem::URB_SessionSubsystem()
 {
 }
 
-void URB_SessionSubsystem::CreateSession(int32 NumPublicConnections, bool IsLANMatch)
+void URB_SessionSubsystem::CreateSession(int32 NumPublicConnections, bool IsLANMatch, FString MapName, FString SessionName)
 {
   const IOnlineSessionPtr sessionInterface = Online::GetSessionInterface(GetWorld());
-  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:CreateSession, Called"), true, false, FColor::Orange, 10.0f);
   if (!sessionInterface.IsValid())
   {
-    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:CreateSession, sessionInterface not valid"), true, false, FColor::Orange, 10.0f);
+
     OnCreateSessionCompleteEvent.Broadcast(false);
     return;
   }
-  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:CreateSession, sessionInterface is valid"), true, false, FColor::Orange, 10.0f);
   LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
   LastSessionSettings->NumPrivateConnections = 0;
   LastSessionSettings->NumPublicConnections = NumPublicConnections;
@@ -36,22 +34,26 @@ void URB_SessionSubsystem::CreateSession(int32 NumPublicConnections, bool IsLANM
   LastSessionSettings->bUsesPresence = true;
   LastSessionSettings->bIsLANMatch = IsLANMatch;
   LastSessionSettings->bShouldAdvertise = true;
+  //FString SessName = *MapName;
+  //SessName += *SessionName;
+  LastSessionSettings->Set(FName(TEXT("SESSION_NAME")), SessionName, EOnlineDataAdvertisementType::ViaOnlineService);
+  LastSessionSettings->Set(SETTING_MAPNAME, MapName, EOnlineDataAdvertisementType::ViaOnlineService);
 
-  LastSessionSettings->Set(SETTING_MAPNAME, FString("Reborn_2022"), EOnlineDataAdvertisementType::ViaOnlineService);
-
+  //FString SessName = MapName;
+  //SessName += *SessionName;
+  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("SubSYstem: CreateSession: ") + SessionName, true, false, FColor::Blue, 20.0f);
   CreateSessionCompleteDelegateHandle = sessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
-  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:CreateSession, right before local player create session call"), true, false, FColor::Orange, 10.0f);
   const ULocalPlayer* localPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-  if (!sessionInterface->CreateSession(*localPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings))
+  if (!sessionInterface->CreateSession(*localPlayer->GetPreferredUniqueNetId(), FName(*SessionName), *LastSessionSettings))
   {
-    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:CreateSession, FAILED!!!!!!!!!!!!!!!"), true, false, FColor::Orange, 10.0f);
+    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("SubSYstem: CreateSession: FAILLLLLLLLLLLLLLLLLLLEEEEED!"), true, false, FColor::Red, 20.0f);
     sessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
 
     OnCreateSessionCompleteEvent.Broadcast(false);
   }
+  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("SubSYstem: CreateSession: SUCCCCEESSSSSSSSSSSSSSSS!"), true, false, FColor::Green, 20.0f);
+  CurrentMapName = MapName;
 
-  int32 hwwer = 32;
-  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:CreateSession, End, Done"), true, false, FColor::Orange, 10.0f);
 }
 
 void URB_SessionSubsystem::OnCreateSessionCompleted(FName SessionName, bool Successful)
@@ -61,7 +63,6 @@ void URB_SessionSubsystem::OnCreateSessionCompleted(FName SessionName, bool Succ
   {
     sessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
   }
-  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("SESSION CREATED")+ SessionName.ToString(), true, false, FColor::Orange, 10.0f);
 
   OnCreateSessionCompleteEvent.Broadcast(Successful);
 }
@@ -104,7 +105,7 @@ void URB_SessionSubsystem::OnUpdateSessionCompleted(FName SessionName, bool Succ
   OnUpdateSessionCompleteEvent.Broadcast(Successful);
 }
 
-void URB_SessionSubsystem::StartSession()
+void URB_SessionSubsystem::StartSession(FName SessionName)
 {
   const IOnlineSessionPtr sessionInterface = Online::GetSessionInterface(GetWorld());
   if (!sessionInterface.IsValid())
@@ -116,16 +117,15 @@ void URB_SessionSubsystem::StartSession()
   StartSessionCompleteDelegateHandle =
     sessionInterface->AddOnStartSessionCompleteDelegate_Handle(StartSessionCompleteDelegate);
 
-  if (!sessionInterface->StartSession(NAME_GameSession))
+  if (!sessionInterface->StartSession(SessionName))
   {
-    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("START SESSION FAILED?"), true, false, FColor::Yellow, 30.0f);
     sessionInterface->ClearOnStartSessionCompleteDelegate_Handle(StartSessionCompleteDelegateHandle);
 
     OnStartSessionCompleteEvent.Broadcast(false);
   } 
 
-  //TryTravelToCurrentSession();
-  float thiskkll = 1.0f;
+  CurrentSessionName = SessionName;
+
 }
 
 void URB_SessionSubsystem::OnStartSessionCompleted(FName SessionName, bool Successful)
@@ -137,19 +137,9 @@ void URB_SessionSubsystem::OnStartSessionCompleted(FName SessionName, bool Succe
   }
 
   OnStartSessionCompleteEvent.Broadcast(Successful);
-
- 
-  //FString connectString;
-  //if (sessionInterface->GetResolvedConnectString(NAME_GameSession, connectString))
-  //{
-    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("URB_SessionSubsystem:OnStartSessionCompleted, GetWorld()->ServerTravel calling"), true, false, FColor::Yellow, 30.0f);
-
-  //}
-
-
 }
 
-void URB_SessionSubsystem::EndSession()
+void URB_SessionSubsystem::EndSession(FName SessionName)
 {
   const IOnlineSessionPtr sessionInterface = Online::GetSessionInterface(GetWorld());
   if (!sessionInterface.IsValid())
@@ -161,7 +151,7 @@ void URB_SessionSubsystem::EndSession()
   EndSessionCompleteDelegateHandle =
     sessionInterface->AddOnEndSessionCompleteDelegate_Handle(EndSessionCompleteDelegate);
 
-  if (!sessionInterface->EndSession(NAME_GameSession))
+  if (!sessionInterface->EndSession(SessionName))
   {
     sessionInterface->ClearOnEndSessionCompleteDelegate_Handle(EndSessionCompleteDelegateHandle);
 
@@ -180,7 +170,7 @@ void URB_SessionSubsystem::OnEndSessionCompleted(FName SessionName, bool Success
   OnEndSessionCompleteEvent.Broadcast(Successful);
 }
 
-void URB_SessionSubsystem::DestroySession()
+void URB_SessionSubsystem::DestroySession(FName SessionName)
 {
   const IOnlineSessionPtr sessionInterface = Online::GetSessionInterface(GetWorld());
   if (!sessionInterface.IsValid())
@@ -192,7 +182,7 @@ void URB_SessionSubsystem::DestroySession()
   DestroySessionCompleteDelegateHandle =
     sessionInterface->AddOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegate);
 
-  if (!sessionInterface->DestroySession(NAME_GameSession))
+  if (!sessionInterface->DestroySession(SessionName))
   {
     sessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegateHandle);
 
@@ -234,10 +224,8 @@ void URB_SessionSubsystem::FindSessions(int32 MaxSearchResults, bool IsLANQuery)
   if (!sessionInterface->FindSessions(*localPlayer->GetPreferredUniqueNetId(), LastSessionSearch.ToSharedRef()))
   {
     sessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
-    //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("No sessions22!"), true, false, FColor::Orange, 10.0f);
     OnFindSessionsCompleteEvent.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
   }
-  //UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Got sessions23!"), true, false, FColor::Orange, 10.0f);
 }
 
 void URB_SessionSubsystem::OnFindSessionsCompleted(bool Successful)
@@ -250,15 +238,33 @@ void URB_SessionSubsystem::OnFindSessionsCompleted(bool Successful)
 
   if (LastSessionSearch->SearchResults.Num() <= 0)
   {
-    UKismetSystemLibrary::PrintString(GetWorld(), TEXT("sucess but 0 sessions!"), true, false, FColor::Orange, 10.0f);
     OnFindSessionsCompleteEvent.Broadcast(TArray<FOnlineSessionSearchResult>(), Successful);
     return;
   }
-  UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Success and had: ")+ FString::FromInt(LastSessionSearch->SearchResults.Num()), true, false, FColor::Orange, 10.0f);
+  
   OnFindSessionsCompleteEvent.Broadcast(LastSessionSearch->SearchResults, Successful);
 }
 
-void URB_SessionSubsystem::JoinGameSession(const FOnlineSessionSearchResult& SessionResult)
+
+FName URB_SessionSubsystem::GetCurrentSession()
+{
+  return CurrentSessionName;
+}
+
+
+FString URB_SessionSubsystem::GetCurrentMap()
+{
+
+  return CurrentMapName;
+}
+
+FOnlineSessionSearchResult URB_SessionSubsystem::GetCurrentOnlineSessionSearchResult()
+{
+
+  return CurrentOnlineSessionSearchResult;
+}
+
+void URB_SessionSubsystem::JoinGameSession(FString MapName, FName SessionName, const FOnlineSessionSearchResult& SessionResult)
 {
   const IOnlineSessionPtr sessionInterface = Online::GetSessionInterface(GetWorld());
   if (!sessionInterface.IsValid())
@@ -271,12 +277,15 @@ void URB_SessionSubsystem::JoinGameSession(const FOnlineSessionSearchResult& Ses
     sessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
 
   const ULocalPlayer* localPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-  if (!sessionInterface->JoinSession(*localPlayer->GetPreferredUniqueNetId(), NAME_GameSession, SessionResult))
+  if (!sessionInterface->JoinSession(*localPlayer->GetPreferredUniqueNetId(), SessionName, SessionResult))
   {
     sessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
 
     OnJoinGameSessionCompleteEvent.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
   }
+  CurrentSessionName = SessionName;
+  CurrentOnlineSessionSearchResult = SessionResult;
+  CurrentMapName = MapName;
 }
 
 void URB_SessionSubsystem::OnJoinSessionCompleted(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
@@ -286,7 +295,6 @@ void URB_SessionSubsystem::OnJoinSessionCompleted(FName SessionName, EOnJoinSess
   {
     sessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
   }
-  //TryTravelToCurrentSession();
   
   OnJoinGameSessionCompleteEvent.Broadcast(Result);
 }
@@ -310,6 +318,9 @@ bool URB_SessionSubsystem::TryTravelToSession(const FOnlineSessionSearchResult& 
   return true;
 }
 
+
+
+
 bool URB_SessionSubsystem::TryTravelToCurrentSession()
 {
   const IOnlineSessionPtr sessionInterface = Online::GetSessionInterface(GetWorld());
@@ -326,6 +337,23 @@ bool URB_SessionSubsystem::TryTravelToCurrentSession()
 
   APlayerController* playerController = GetWorld()->GetFirstPlayerController();
   playerController->ClientTravel(connectString, TRAVEL_Absolute);
+  return true;
+}
+
+
+bool URB_SessionSubsystem::TryTravelToLocalMap(FString MapName)
+{
+
+  const IOnlineSessionPtr sessionInterface = Online::GetSessionInterface(GetWorld());
+  if (!sessionInterface.IsValid())
+  {
+    return false;
+  }
+
+
+  APlayerController* playerController = GetWorld()->GetFirstPlayerController();
+  playerController->ClientTravel(MapName, TRAVEL_Absolute);
+
   return true;
 }
 
