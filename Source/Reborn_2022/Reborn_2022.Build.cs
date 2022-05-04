@@ -9,7 +9,7 @@ public class Reborn_2022 : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "GameplayCameras", "OnlineSubsystem",
-            "OnlineSubsystemUtils", });
+            "OnlineSubsystemUtils", "SlateCore" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

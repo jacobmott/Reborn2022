@@ -29,7 +29,7 @@ protected:
   FTimeline CurveTimeline;
 
   UPROPERTY(EditAnywhere, Category = "Timeline")
-  UCurveFloat* CurveFloat;
+  TObjectPtr<UCurveFloat> CurveFloat;
 
   UPROPERTY()
   FVector StartLoc;

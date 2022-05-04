@@ -19,6 +19,6 @@ public:
   virtual bool Initialize();
 
   UPROPERTY(meta = (BindWidget))
-  UProgressBar* ProgressHealthBar;
+  TObjectPtr<UProgressBar> ProgressHealthBar;
 	
 };

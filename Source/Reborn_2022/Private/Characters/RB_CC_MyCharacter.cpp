@@ -8,10 +8,13 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/Controller.h"
 #include "DrawDebugHelpers.h"
-#include "Interact/InteractInterface.h"
 #include "MatineeCameraShake.h"
+
+#include "Interact/InteractInterface.h"
 #include "Health/RB_ACC_HealthComponent.h"
 #include "Widgets/RB_UserWidget.h"
+#include "UI/RB_A_ActorUI.h"
+
 #include "Components/ProgressBar.h"
 #include "Components/WidgetComponent.h"
 #include "UObject/ConstructorHelpers.h"
@@ -56,6 +59,10 @@ ARB_CC_MyCharacter::ARB_CC_MyCharacter()
   StaticMeshComp->OnComponentBeginOverlap.AddDynamic(this, &ARB_CC_MyCharacter::OnOverlapBegin);
 
   HealthComponent = CreateDefaultSubobject<URB_ACC_HealthComponent>(TEXT("HealthComp"));
+
+  //ActorUI = CreateDefaultSubobject<ARB_A_ActorUI>(TEXT("ARB_A_ActorUI"));
+  //ActorUI->(RootComponent);
+ 
 
   BaseTurnRate = 45.0f;
   BaseLookUpAtRate = 45.0f;
@@ -399,6 +406,7 @@ void ARB_CC_MyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
   PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ARB_CC_MyCharacter::InteractPressed);
   PlayerInputComponent->BindAction("SpawnActor", IE_Pressed, this, &ARB_CC_MyCharacter::SpawnActorAtLocation);
+  PlayerInputComponent->BindAction("ShowUI", IE_Pressed, this, &ARB_CC_MyCharacter::ShowUIAtLocation);
   PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ARB_CC_MyCharacter::FireForward);
   PlayerInputComponent->BindAction("Fire2", IE_Pressed, this, &ARB_CC_MyCharacter::FireForwardClientTrace);
   PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
@@ -445,10 +453,40 @@ ForwardTraceHitInformation ARB_CC_MyCharacter::GetForwardTraceHitInformation(boo
 }
 
 
+void ARB_CC_MyCharacter::ShowUIAtLocation()
+{
+
+  ShowUI = !ShowUI;
+
+  if (ShowUI){
+    APlayerController* PC = GetWorld()->GetFirstPlayerController();
+
+    if (PC)
+    {
+      PC->bShowMouseCursor = true;
+      PC->bEnableClickEvents = true;
+      PC->bEnableMouseOverEvents = true;
+    }
+  }
+  else {
+    APlayerController* PC = GetWorld()->GetFirstPlayerController();
+
+    if (PC)
+    {
+      PC->bShowMouseCursor = false;
+      PC->bEnableClickEvents = false;
+      PC->bEnableMouseOverEvents = false;
+    }
+  }
+  //FActorSpawnParameters SpawnParams;
+  //AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(ActorToSpawn, HitResult.Location, TraceInfo.Rot, SpawnParams);
+  
+}
+
 void ARB_CC_MyCharacter::SpawnActorAtLocation_Implementation()
 {
 
-  //This is just here to remind the reader that this shoud be a server RPC(only done/called on the server)
+  //This is just here to remind the reader that this should be a server RPC(only done/called on the server)
   if (!HasAuthority()) {
     return;
   }
@@ -465,6 +503,9 @@ void ARB_CC_MyCharacter::SpawnActorAtLocation_Implementation()
     AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(ActorToSpawn, HitResult.Location, TraceInfo.Rot, SpawnParams);
   }
 }
+
+
+
 
 
 void ARB_CC_MyCharacter::SpawnExplosion_Implementation(FVector Location, FVector Scale)

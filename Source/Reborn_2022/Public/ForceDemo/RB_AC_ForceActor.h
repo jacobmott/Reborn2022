@@ -18,7 +18,7 @@ public:
   ARB_AC_ForceActor();
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Force Cube");
-  UStaticMeshComponent* StaticMeshComp;
+  TObjectPtr<UStaticMeshComponent> StaticMeshComp;
 
 protected:
   // Called when the game starts or when spawned
