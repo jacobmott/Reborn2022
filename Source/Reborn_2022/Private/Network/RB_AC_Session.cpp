@@ -43,7 +43,7 @@ ARB_AC_Session::ARB_AC_Session()
     UE_LOG(LogTemp, Warning, TEXT("TextHudWidgetObj widget could not initialize on ARB_AC_Session"));
   }
 
-}
+}               
 
 
 void ARB_AC_Session::UpdateFloatingTextHud()

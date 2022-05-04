@@ -16,6 +16,7 @@ class UCurveFloat;
 class URB_ACC_HealthComponent;
 class URB_UserWidget;
 class UWidgetComponent;
+class ARB_A_ActorUI;
 
 struct ForwardTraceHitInformation {
   bool HadHit;
@@ -39,17 +40,19 @@ public:
   //Test
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-  USpringArmComponent* SpringArmComp;
+  TObjectPtr<USpringArmComponent> SpringArmComp;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-  UCameraComponent* CameraComp;
+  TObjectPtr<UCameraComponent> CameraComp;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
-  UStaticMeshComponent* StaticMeshComp;
+  TObjectPtr<UStaticMeshComponent> StaticMeshComp;
 
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ActorUI")
+  TObjectPtr<ARB_A_ActorUI> ActorUI;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
-  URB_ACC_HealthComponent* HealthComponent;
+  TObjectPtr<URB_ACC_HealthComponent> HealthComponent;
 
   UFUNCTION()
   void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
@@ -62,28 +65,28 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "HUD")
   TSubclassOf<URB_UserWidget> HudClass;
 
-  URB_UserWidget* Hud;
+  TObjectPtr<URB_UserWidget> Hud;
 
   void UpdateHud();
   void UpdateFloatingHealthHud();
+  
+  //Floating widget
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
+  TObjectPtr<UWidgetComponent> MyHealthWidget;
 
   //Floating widget
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
-  UWidgetComponent* MyHealthWidget;
-
-  //Floating widget
-  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
-  UWidgetComponent* MyHealthWidget2;
-
-
-  //Floating widget
-  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
-  UWidgetComponent* MyHealthWidget3;
+  TObjectPtr<UWidgetComponent> MyHealthWidget2;
 
 
   //Floating widget
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
-  UWidgetComponent* MyHealthWidget4;
+  TObjectPtr<UWidgetComponent> MyHealthWidget3;
+
+
+  //Floating widget
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
+  TObjectPtr<UWidgetComponent> MyHealthWidget4;
 
 
 protected:
@@ -116,6 +119,8 @@ protected:
   UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Network")
   void SpawnActorAtLocation();
 
+  UFUNCTION()
+  void ShowUIAtLocation();
 
   UFUNCTION()
   void FireForwardClientTrace();
@@ -156,12 +161,11 @@ protected:
   TSubclassOf<UMatineeCameraShake> CameraShake;
 
   UPROPERTY(EditAnywhere, Category = "Timeline")
-  UCurveFloat* CurveFloat;
+  TObjectPtr<UCurveFloat> CurveFloat;
 
 
   UPROPERTY(EditAnywhere, Category = "RadialForce")
-  UParticleSystem* RadialExplosionEffect;
-
+  TObjectPtr<UParticleSystem> RadialExplosionEffect;
 
 
 
@@ -177,12 +181,14 @@ public:
 
 
 private:
-  AActor* FocusedActor;
+  TObjectPtr<AActor> FocusedActor;
 
   void CameraShakeDemo(float Scale);
 
   ForwardTraceHitInformation GetForwardTraceHitInformation(bool DrawDebugTraceLine);
 
+
+  bool ShowUI = false;
 
   UPROPERTY()
   FVector StartScale;

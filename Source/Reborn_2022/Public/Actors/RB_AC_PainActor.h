@@ -26,7 +26,7 @@ public:
   float DamageAmount;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-  UStaticMeshComponent* StaticMeshComp;
+  TObjectPtr<UStaticMeshComponent> StaticMeshComp;
 
 
 protected:

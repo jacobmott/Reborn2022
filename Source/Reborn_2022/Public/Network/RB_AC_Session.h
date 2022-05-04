@@ -28,7 +28,7 @@ public:
   FString MapName;
 
   UPROPERTY(EditAnywhere, BlueprintReadOnly)
-  UTexture2D* Texture;
+  TObjectPtr<UTexture2D> Texture;
 
   FName SessionName;
 
@@ -45,15 +45,15 @@ public:
 	ARB_AC_Session();
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
-  UStaticMeshComponent* StaticMeshComp;
+  TObjectPtr<UStaticMeshComponent> StaticMeshComp;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collisions")
-  UCapsuleComponent* CapsuleComponent;
+  TObjectPtr<UCapsuleComponent> CapsuleComponent;
   
 
   //Floating widget
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TextHud")
-  UWidgetComponent* TextHudWidget;
+  TObjectPtr<UWidgetComponent> TextHudWidget;
 
 
 protected:
