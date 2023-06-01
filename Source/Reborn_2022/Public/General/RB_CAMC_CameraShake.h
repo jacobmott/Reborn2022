@@ -3,14 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MatineeCameraShake.h"
+#include "LegacyCameraShake.h"
 #include "RB_CAMC_CameraShake.generated.h"
+
 
 /**
  * 
  */
 UCLASS()
-class REBORN_2022_API URB_CAMC_CameraShake : public UMatineeCameraShake
+class REBORN_2022_API URB_CAMC_CameraShake : public ULegacyCameraShake
 {
 	GENERATED_BODY()
 

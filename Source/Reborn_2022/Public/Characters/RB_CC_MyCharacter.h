@@ -5,13 +5,14 @@
 #include "CoreMinimal.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
+#include "LegacyCameraShake.h"
 #include "RB_CC_MyCharacter.generated.h"
 
 
 class USpringArmComponent;
 class UCameraComponent;
 class UStaticMeshComponent;
-class UMatineeCameraShake;
+class ULegacyCameraShake;
 class UCurveFloat;
 class URB_ACC_HealthComponent;
 class URB_UserWidget;
@@ -158,7 +159,7 @@ protected:
   bool UseActorsCenterOfMassInCollisionCalculation;
 
   UPROPERTY(EditAnywhere, Category = "Camera")
-  TSubclassOf<UMatineeCameraShake> CameraShake;
+  TSubclassOf<ULegacyCameraShake> CameraShake;
 
   UPROPERTY(EditAnywhere, Category = "Timeline")
   TObjectPtr<UCurveFloat> CurveFloat;
